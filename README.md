@@ -124,6 +124,8 @@ console.log(text)
 
 ### Self-hosting
 
+**Requires Node.js 22** (this repo includes `.nvmrc`). Run `node -v`; if needed: `nvm install 22 && nvm use`.
+
 ```bash
 # Clone the repository
 git clone https://github.com/vercel-labs/knowledge-agent-template.git
@@ -135,12 +137,20 @@ bun install
 # Configure environment variables
 cp apps/app/.env.example apps/app/.env
 # Edit .env with your configuration
+# (A .env with BETTER_AUTH_SECRET may already exist; add GITHUB_CLIENT_ID/SECRET for login.)
 
-# Start the app
+# Start the app (web UI)
 bun run dev
 ```
 
-**Required environment variables:**
+If you see **`EMFILE: too many open files`** on macOS, raise the file descriptor limit in the same terminal before starting:
+
+```bash
+ulimit -n 10240
+bun run dev
+```
+
+To make the limit permanent on macOS, add to `~/.zshrc`: `ulimit -n 10240`
 
 ```bash
 # Authentication
@@ -202,12 +212,46 @@ Both bots use the same AI agent and knowledge base as the chat interface. Want t
 
 ## Development
 
+### How to run (local)
+
+1. **Node 22**  
+   `node -v` should be 22.x. If not: `nvm install 22 && nvm use`.
+
+2. **Install and start**
+   ```bash
+   cd knowledge-agent-template-mybot   # or your repo path
+   bun install
+   bun run dev
+   ```
+
+3. **Open in browser**  
+   Go to **http://localhost:3000**
+
+### What you're looking at
+
+| Where | What it is |
+|-------|------------|
+| **http://localhost:3000** | **Chat UI** — main app. Sign in (GitHub OAuth if configured), start a chat, ask questions. The agent can search your configured knowledge sources (grep/find/cat in a sandbox) and reply. You’ll see tool use (files read, commands run) in real time. |
+| **http://localhost:3000/admin** | **Admin panel** — manage sources (GitHub repos, YouTube), sync content, view usage/stats, errors, and API keys. Optional: an admin AI you can ask about the app’s own data. |
+
+To actually answer questions from your content you need to add **sources** in the admin and run a **sync** so the sandbox has something to search. Until then you can still use the chat UI; the agent just won’t have your docs/repos to search.
+
+### Seeing a blank page at localhost:3000?
+
+1. **Open DevTools** (F12 or right‑click → Inspect → **Console**). If you see red errors (e.g. missing env, failed fetch), that’s likely the cause.
+2. **Try the admin** — go to **http://localhost:3000/admin**. If that loads but the home page doesn’t, the issue is probably with the main chat/landing page or auth.
+3. **Auth not configured** — The app uses GitHub OAuth for login. If `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` in `apps/app/.env` are empty, the login/landing page can end up blank or broken. Add a [GitHub App](https://github.com/settings/apps/new) (Homepage URL: `http://localhost:3000`, Callback URL: `http://localhost:3000/api/auth/callback/github`), then set `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` in `apps/app/.env` and restart the dev server.
+4. **Hard refresh** — Try Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows) in case the bundle is cached.
+
 ```bash
 # Install dependencies
 bun install
 
-# Start the app in dev mode
+# Start the web app in dev mode
 bun run dev
+
+# Optional: run package watcher processes only (sdk/agent/github)
+bun run dev:packages
 
 # Build all packages
 bun run build

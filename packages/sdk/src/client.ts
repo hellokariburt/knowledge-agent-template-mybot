@@ -1,5 +1,7 @@
 import type {
   AgentConfig,
+  CreateWidgetTokenRequest,
+  CreateWidgetTokenResponse,
   GenerateResult,
   ReportUsageOptions,
   SavoirConfig,
@@ -10,6 +12,8 @@ import type {
   SyncOptions,
   SyncResponse,
   SyncSourceResponse,
+  WidgetChatRequest,
+  WidgetConfigResponse,
 } from './types'
 import { NetworkError, SavoirError } from './errors'
 
@@ -83,7 +87,7 @@ export class SavoirClient {
 
   private async post<T>(
     path: string,
-    body: Record<string, unknown> = {},
+    body: unknown = {},
   ): Promise<T> {
     const url = `${this.apiUrl}${path}`
 
@@ -97,11 +101,17 @@ export class SavoirClient {
     }
 
     try {
+      const requestBody = (
+        typeof body === 'object' && body !== null
+          ? { ...body as Record<string, unknown> }
+          : {}
+      )
+
       const response = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          ...body,
+          ...requestBody,
           sessionId: this.sessionId,
         }),
       })
@@ -172,6 +182,46 @@ export class SavoirClient {
 
   async getAgentConfig(): Promise<AgentConfig> {
     return await this.get<AgentConfig>('/api/agent-config/public')
+  }
+
+  async getWidgetConfig(): Promise<WidgetConfigResponse> {
+    return await this.get<WidgetConfigResponse>('/api/widget/config')
+  }
+
+  async createWidgetToken(input: CreateWidgetTokenRequest): Promise<CreateWidgetTokenResponse> {
+    return await this.post<CreateWidgetTokenResponse>('/api/widget/token', input)
+  }
+
+  async streamWidgetChat(input: WidgetChatRequest): Promise<Response> {
+    const url = `${this.apiUrl}/api/widget/chat`
+
+    const headers: Record<string, string> = {
+      ...this.extraHeaders,
+      'Content-Type': 'application/json',
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(input),
+    })
+
+    if (!response.ok) {
+      let data: { message?: string, error?: string } = {}
+      try {
+        data = await response.json()
+      } catch {
+        // Ignore JSON parse failures and throw a generic error below.
+      }
+
+      throw new SavoirError({
+        statusCode: response.status,
+        message: data.message || 'Unknown error',
+        error: data.error,
+      })
+    }
+
+    return response
   }
 
   async reportUsage(result: GenerateResult, options?: ReportUsageOptions): Promise<void> {

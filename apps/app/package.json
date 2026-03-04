@@ -35,6 +35,8 @@
     "@nuxthub/core": "^0.10.6",
     "@nuxtjs/mdc": "^0.20.1",
     "@onmax/nuxt-better-auth": "0.0.2-alpha.29",
+    "@workflow/nitro": "4.0.1-beta.49",
+    "@workflow/nuxt": "4.0.1-beta.38",
     "@savoir/agent": "workspace:*",
     "@savoir/github": "workspace:*",
     "@savoir/sdk": "workspace:*",
@@ -45,10 +47,11 @@
     "@vercel/functions": "^3.4.1",
     "@vercel/sandbox": "^1.4.1",
     "ai": "^6.0.85",
-    "better-auth": "^1.4.18",
+    "better-auth": "1.4.18",
     "chat": "^4.13.0",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
+    "evlog": "^1.9.0",
     "postgres": "^3.4.5",
     "giget": "^3.1.2",
     "motion-v": "^1.10.3",
@@ -58,6 +61,7 @@
     "shaders": "^2.3.63",
     "sharp": "^0.34.5",
     "shiki-stream": "^0.1.4",
+    "unstorage": "^1.17.3",
     "workflow": "4.1.0-beta.54",
     "youtube-transcript": "^1.2.1",
     "zod": "^4.3.6"
@@ -67,6 +71,7 @@
     "@types/node": "^25.2.2",
     "drizzle-kit": "^0.31.9",
     "eslint": "^9.23.0",
+    "tailwindcss": "^4.1.13",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.2.4"
   }

@@ -1,10 +1,10 @@
 import { SavoirClient } from './client'
 import { createBashBatchTool, createBashTool } from './tools'
-import type { AgentConfig, GenerateResult, ReportUsageOptions, SavoirConfig } from './types'
+import type { AgentConfig, CreateWidgetTokenRequest, CreateWidgetTokenResponse, GenerateResult, ReportUsageOptions, SavoirConfig, WidgetChatRequest, WidgetConfigResponse } from './types'
 
 export { ALLOWED_BASH_COMMANDS, BLOCKED_SHELL_PATTERNS, isPathWithinDirectory, pathMatchesGlob, validateShellCommand } from './shell-policy'
 
-export type { SavoirConfig, ShellResponse, ShellBatchResponse, ShellCommandResult, SyncOptions, SyncResponse, SnapshotResponse, GitHubSource, YouTubeSource, SourcesResponse, SyncSourceResponse, AgentConfig, GenerateResult, ReportUsageOptions } from './types'
+export type { SavoirConfig, ShellResponse, ShellBatchResponse, ShellCommandResult, SyncOptions, SyncResponse, SnapshotResponse, GitHubSource, YouTubeSource, SourcesResponse, SyncSourceResponse, AgentConfig, GenerateResult, ReportUsageOptions, WidgetConfigResponse, CreateWidgetTokenRequest, CreateWidgetTokenResponse, WidgetChatRequest } from './types'
 export { SavoirError, NetworkError } from './errors'
 export { SavoirClient } from './client'
 
@@ -23,6 +23,12 @@ export interface Savoir {
   getAgentConfig: () => Promise<AgentConfig>
   /** Report usage from an AI SDK generate result. Extracts totalUsage and modelId automatically. */
   reportUsage: (result: GenerateResult, options?: ReportUsageOptions) => Promise<void>
+  /** Read public widget config for embed bootstrapping. */
+  getWidgetConfig: () => Promise<WidgetConfigResponse>
+  /** Mint a short-lived widget token for a site/visitor pair. */
+  createWidgetToken: (input: CreateWidgetTokenRequest) => Promise<CreateWidgetTokenResponse>
+  /** Start a widget chat stream. Returns the raw fetch Response (SSE stream). */
+  streamWidgetChat: (input: WidgetChatRequest) => Promise<Response>
 }
 
 /**
@@ -59,5 +65,8 @@ export function createSavoir(config: SavoirConfig): Savoir {
     setSessionId: (sessionId: string) => client.setSessionId(sessionId),
     getAgentConfig: () => client.getAgentConfig(),
     reportUsage: (result, options) => client.reportUsage(result, options),
+    getWidgetConfig: () => client.getWidgetConfig(),
+    createWidgetToken: input => client.createWidgetToken(input),
+    streamWidgetChat: input => client.streamWidgetChat(input),
   }
 }

@@ -19,7 +19,8 @@
   "scripts": {
     "prepare": "turbo run build --filter='./packages/*'",
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=@savoir/app",
+    "dev:packages": "turbo run dev --filter=./packages/*",
     "dev:app": "turbo run dev --filter=@savoir/app",
     "dev:gateway": "curl -X GET http://localhost:3000/api/discord/gateway",
     "lint": "turbo run lint",

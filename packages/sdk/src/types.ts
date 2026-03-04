@@ -13,6 +13,32 @@ export interface SavoirConfig {
   sourceId?: string
 }
 
+export interface WidgetConfigResponse {
+  siteId: string
+  tokenEndpoint: string
+  chatEndpoint: string
+  defaultModel: string
+  name: string
+  welcomeMessage: string
+}
+
+export interface CreateWidgetTokenRequest {
+  siteId: string
+  visitorId: string
+}
+
+export interface CreateWidgetTokenResponse {
+  token: string
+  expiresInSeconds: number
+}
+
+export interface WidgetChatRequest {
+  token: string
+  messages: unknown[]
+  chatId?: string
+  model?: string
+}
+
 export interface SearchResult {
   path: string
   lineNumber: number
