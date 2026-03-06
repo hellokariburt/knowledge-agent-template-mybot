@@ -35,7 +35,7 @@ function widgetRateLimitKey(siteId: string, visitorId: string, minute: string): 
   const safeSiteId = sanitizeKeyPart(siteId)
   const safeVisitorId = sanitizeKeyPart(visitorId)
   const safeMinute = sanitizeKeyPart(minute)
-  return `ratelimit:widget:${safeSiteId}:${safeVisitorId}:${safeMinute}`
+  return `ratelimit_widget_${safeSiteId}_${safeVisitorId}_${safeMinute}`
 }
 
 function currentMinuteKey(): string {
