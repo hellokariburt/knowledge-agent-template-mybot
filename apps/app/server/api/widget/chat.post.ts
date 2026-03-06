@@ -27,8 +27,15 @@ const bodySchema = z.object({
   model: z.string().optional(),
 })
 
+function sanitizeKeyPart(value: string): string {
+  return value.replace(/[^a-zA-Z0-9._-]/g, '_')
+}
+
 function widgetRateLimitKey(siteId: string, visitorId: string, minute: string): string {
-  return `ratelimit:widget:${siteId}:${visitorId}:${minute}`
+  const safeSiteId = sanitizeKeyPart(siteId)
+  const safeVisitorId = sanitizeKeyPart(visitorId)
+  const safeMinute = sanitizeKeyPart(minute)
+  return `ratelimit:widget:${safeSiteId}:${safeVisitorId}:${safeMinute}`
 }
 
 function currentMinuteKey(): string {
