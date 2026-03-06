@@ -1,0 +1,215 @@
+{
+  "count": 30,
+  "items": [
+    {
+      "id": "card-0-IHG-One-Rewards-Premier-Credit-Card-(Chase)",
+      "name": "IHG One Rewards Premier Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-0-ihg-one-rewards-premier-credit-card-chase.json",
+      "review_url": "https://thepointsguy.com/guide/ihg-premier-credit-card-review/"
+    },
+    {
+      "id": "card-1-IHG-One-Rewards-Premier-Credit-Card-(Chase)",
+      "name": "IHG One Rewards Premier Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-1-ihg-one-rewards-premier-credit-card-chase.json",
+      "review_url": ""
+    },
+    {
+      "id": "card-2-Ramp-Business-Card-(Ramp)",
+      "name": "Ramp Business Card",
+      "issuer": "Ramp",
+      "path": "docs/cards-rag/card-2-ramp-business-card-ramp.json",
+      "review_url": "https://thepointsguy.com/credit-cards/business/"
+    },
+    {
+      "id": "card-3-Hilton-Honors-American-Express-Aspire-Card-(Americ",
+      "name": "Hilton Honors American Express Aspire Card",
+      "issuer": "American Express",
+      "path": "docs/cards-rag/card-3-hilton-honors-american-express-aspire-card-americ.json",
+      "review_url": "https://thepointsguy.com/credit-cards/reviews/hilton-amex-aspire-review/"
+    },
+    {
+      "id": "card-4-Capital-One-Quicksilver-Cash-Rewards-for-Good-Cred",
+      "name": "Capital One Quicksilver Cash Rewards for Good Credit",
+      "issuer": "Capital One",
+      "path": "docs/cards-rag/card-4-capital-one-quicksilver-cash-rewards-for-good-cred.json",
+      "review_url": "https://thepointsguy.com/credit-cards/capital-one/"
+    },
+    {
+      "id": "card-5-Capital-One-VentureOne-Rewards-for-Good-Credit-(Ca",
+      "name": "Capital One VentureOne Rewards for Good Credit",
+      "issuer": "Capital One",
+      "path": "docs/cards-rag/card-5-capital-one-ventureone-rewards-for-good-credit-ca.json",
+      "review_url": "https://thepointsguy.com/credit-cards/capital-one/"
+    },
+    {
+      "id": "card-6-Capital-One-Savor-Cash-Rewards-for-Good-Credit-(Ca",
+      "name": "Capital One Savor Cash Rewards for Good Credit",
+      "issuer": "Capital One",
+      "path": "docs/cards-rag/card-6-capital-one-savor-cash-rewards-for-good-credit-ca.json",
+      "review_url": "https://thepointsguy.com/credit-cards/capital-one/"
+    },
+    {
+      "id": "card-7-Southwest\u00ae-Rapid-Rewards\u00ae-Premier-Business-Credit-",
+      "name": "Southwest\u00ae Rapid Rewards\u00ae Premier Business Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-7-southwest-rapid-rewards-premier-business-credit.json",
+      "review_url": "https://thepointsguy.com/credit-cards/airlines/southwest-airlines/reviews/southwest-premier-business-card-review/"
+    },
+    {
+      "id": "card-8-Southwest\u00ae-Rapid-Rewards\u00ae-Premier-Business-Credit-",
+      "name": "Southwest\u00ae Rapid Rewards\u00ae Premier Business Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-8-southwest-rapid-rewards-premier-business-credit.json",
+      "review_url": ""
+    },
+    {
+      "id": "card-9-American-Express&reg;-Gold-Card-(American-Express)",
+      "name": "American Express&reg; Gold Card",
+      "issuer": "American Express",
+      "path": "docs/cards-rag/card-9-american-express-reg-gold-card-american-express.json",
+      "review_url": "https://thepointsguy.com/credit-cards/reviews/amex-gold-card-review/"
+    },
+    {
+      "id": "card-10-United-Quest\u2120-Card-(Chase)",
+      "name": "United Quest\u2120 Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-10-united-quest-card-chase.json",
+      "review_url": "https://thepointsguy.com/credit-cards/reviews/united-quest-card-review/"
+    },
+    {
+      "id": "card-11-United-Quest\u2120-Card-(Chase)",
+      "name": "United Quest\u2120 Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-11-united-quest-card-chase.json",
+      "review_url": ""
+    },
+    {
+      "id": "card-12-American-Express&reg;-Business-Gold-Card-(American",
+      "name": "American Express&reg; Business Gold Card",
+      "issuer": "American Express",
+      "path": "docs/cards-rag/card-12-american-express-reg-business-gold-card-american.json",
+      "review_url": "https://thepointsguy.com/guide/amex-business-gold-card-review/"
+    },
+    {
+      "id": "card-13-Delta-SkyMiles\u00ae-Gold-Business-American-Express-Car",
+      "name": "Delta SkyMiles\u00ae Gold Business American Express Card",
+      "issuer": "American Express",
+      "path": "docs/cards-rag/card-13-delta-skymiles-gold-business-american-express-car.json",
+      "review_url": "https://thepointsguy.com/guide/gold-delta-skymiles-business-amex-credit-card-review/"
+    },
+    {
+      "id": "card-14-Delta-SkyMiles\u00ae-Platinum-Business-American-Express",
+      "name": "Delta SkyMiles\u00ae Platinum Business American Express Card",
+      "issuer": "American Express",
+      "path": "docs/cards-rag/card-14-delta-skymiles-platinum-business-american-express.json",
+      "review_url": "https://thepointsguy.com/guide/platinum-delta-skymiles-business-card-review/"
+    },
+    {
+      "id": "card-15-Credit-One-Bank\u00ae-Wander\u00ae-American-Express\u00ae-with-Di",
+      "name": "Credit One Bank\u00ae Wander\u00ae American Express\u00ae with Dining, Gas & Travel Rewards",
+      "issuer": "Credit One Bank",
+      "path": "docs/cards-rag/card-15-credit-one-bank-wander-american-express-with-di.json",
+      "review_url": "https://thepointsguy.com/credit-cards/travel/"
+    },
+    {
+      "id": "card-16-Capital-One-Quicksilver-Student-Cash-Rewards-Credi",
+      "name": "Capital One Quicksilver Student Cash Rewards Credit Card",
+      "issuer": "Capital One",
+      "path": "docs/cards-rag/card-16-capital-one-quicksilver-student-cash-rewards-credi.json",
+      "review_url": "https://thepointsguy.com/credit-cards/cash-back/"
+    },
+    {
+      "id": "card-17-Aeroplan\u00ae-Credit-Card-(Chase)",
+      "name": "Aeroplan\u00ae Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-17-aeroplan-credit-card-chase.json",
+      "review_url": ""
+    },
+    {
+      "id": "card-18-Ink-Business-Unlimited\u00ae-Credit-Card-(Chase)",
+      "name": "Ink Business Unlimited\u00ae Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-18-ink-business-unlimited-credit-card-chase.json",
+      "review_url": "https://thepointsguy.com/reviews/ink-business-unlimited-credit-card-review/"
+    },
+    {
+      "id": "card-19-Ink-Business-Unlimited\u00ae-Credit-Card-(Chase)",
+      "name": "Ink Business Unlimited\u00ae Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-19-ink-business-unlimited-credit-card-chase.json",
+      "review_url": ""
+    },
+    {
+      "id": "card-20-Atmos\u2122-Rewards-Visa-Signature\u00ae-Business-Card-(Bank",
+      "name": "Atmos\u2122 Rewards Visa Signature\u00ae Business Card",
+      "issuer": "Bank of America",
+      "path": "docs/cards-rag/card-20-atmos-rewards-visa-signature-business-card-bank.json",
+      "review_url": "https://thepointsguy.com/credit-cards/reviews/alaska-airlines-visa-business-card-review/"
+    },
+    {
+      "id": "card-21-United-Club\u2120-Card-(Chase)",
+      "name": "United Club\u2120 Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-21-united-club-card-chase.json",
+      "review_url": "https://thepointsguy.com/guide/united-infinite-club-card-review/"
+    },
+    {
+      "id": "card-22-Wells-Fargo-Reflect\u00ae-Card-(Wells-Fargo)",
+      "name": "Wells Fargo Reflect\u00ae Card",
+      "issuer": "Wells Fargo",
+      "path": "docs/cards-rag/card-22-wells-fargo-reflect-card-wells-fargo.json",
+      "review_url": "https://thepointsguy.com/guide/wells-fargo-reflect-card-review"
+    },
+    {
+      "id": "card-23-World-of-Hyatt-Business-Credit-Card-(Chase)",
+      "name": "World of Hyatt Business Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-23-world-of-hyatt-business-credit-card-chase.json",
+      "review_url": "https://thepointsguy.com/credit-cards/hotel/hyatt/world-of-hyatt-business-credit-card-review/"
+    },
+    {
+      "id": "card-24-World-of-Hyatt-Business-Credit-Card-(Chase)",
+      "name": "World of Hyatt Business Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-24-world-of-hyatt-business-credit-card-chase.json",
+      "review_url": ""
+    },
+    {
+      "id": "card-25-Capital-One-Quicksilver-Secured-Cash-Rewards-Credi",
+      "name": "Capital One Quicksilver Secured Cash Rewards Credit Card",
+      "issuer": "Capital One",
+      "path": "docs/cards-rag/card-25-capital-one-quicksilver-secured-cash-rewards-credi.json",
+      "review_url": "https://thepointsguy.com/credit-cards/capital-one/capital-one-quicksilver-secured-review/"
+    },
+    {
+      "id": "card-26-Marriott-Bonvoy-Boundless\u00ae-Credit-Card-(Chase)",
+      "name": "Marriott Bonvoy Boundless\u00ae Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-26-marriott-bonvoy-boundless-credit-card-chase.json",
+      "review_url": "https://thepointsguy.com/guide/marriott-bonvoy-boundless-credit-card-review/"
+    },
+    {
+      "id": "card-27-Marriott-Bonvoy-Boundless\u00ae-Credit-Card-(Chase)",
+      "name": "Marriott Bonvoy Boundless\u00ae Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-27-marriott-bonvoy-boundless-credit-card-chase.json",
+      "review_url": ""
+    },
+    {
+      "id": "card-28-Delta-SkyMiles\u00ae-Reserve-American-Express-Card-(Ame",
+      "name": "Delta SkyMiles\u00ae Reserve American Express Card",
+      "issuer": "American Express",
+      "path": "docs/cards-rag/card-28-delta-skymiles-reserve-american-express-card-ame.json",
+      "review_url": "https://thepointsguy.com/guide/delta-reserve-amex-credit-card-review/"
+    },
+    {
+      "id": "card-29-Marriott-Bonvoy-Bold\u00ae-Credit-Card-(Chase)",
+      "name": "Marriott Bonvoy Bold\u00ae Credit Card",
+      "issuer": "Chase",
+      "path": "docs/cards-rag/card-29-marriott-bonvoy-bold-credit-card-chase.json",
+      "review_url": "https://thepointsguy.com/guide/marriott-bonvoy-bold-credit-card-review/"
+    }
+  ]
+}
