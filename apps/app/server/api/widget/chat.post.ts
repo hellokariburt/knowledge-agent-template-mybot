@@ -27,6 +27,8 @@ const bodySchema = z.object({
   model: z.string().optional(),
 })
 
+const inMemoryWidgetRateLimit = new Map<string, { count: number, expiresAt: number }>()
+
 function sanitizeKeyPart(value: string): string {
   return value.replace(/[^a-zA-Z0-9._-]/g, '_')
 }
@@ -40,6 +42,37 @@ function widgetRateLimitKey(siteId: string, visitorId: string, minute: string): 
 
 function currentMinuteKey(): string {
   return new Date().toISOString().slice(0, 16)
+}
+
+async function checkAndIncrementWidgetRateLimit(
+  key: string,
+  limit: number,
+): Promise<{ limited: boolean, count: number }> {
+  const now = Date.now()
+  const ttlMs = 90_000
+
+  try {
+    const currentCount = await kv.get<number>(key) ?? 0
+    if (currentCount >= limit) {
+      return { limited: true, count: currentCount }
+    }
+    await kv.set(key, currentCount + 1, { ttl: 90 })
+    return { limited: false, count: currentCount + 1 }
+  } catch {
+    const existing = inMemoryWidgetRateLimit.get(key)
+    const count = existing && existing.expiresAt > now ? existing.count : 0
+
+    if (count >= limit) {
+      return { limited: true, count }
+    }
+
+    inMemoryWidgetRateLimit.set(key, {
+      count: count + 1,
+      expiresAt: now + ttlMs,
+    })
+
+    return { limited: false, count: count + 1 }
+  }
 }
 
 export default defineEventHandler(async (event) => {
@@ -79,8 +112,8 @@ export default defineEventHandler(async (event) => {
 
   const minute = currentMinuteKey()
   const rateLimitKey = widgetRateLimitKey(claims.siteId, claims.visitorId, minute)
-  const currentCount = await kv.get<number>(rateLimitKey) ?? 0
-  if (currentCount >= config.rateLimitPerMinute) {
+  const rateLimit = await checkAndIncrementWidgetRateLimit(rateLimitKey, config.rateLimitPerMinute)
+  if (rateLimit.limited) {
     throw createError({
       statusCode: 429,
       message: 'Widget rate limit exceeded',
@@ -90,7 +123,6 @@ export default defineEventHandler(async (event) => {
       },
     })
   }
-  await kv.set(rateLimitKey, currentCount + 1, { ttl: 90 })
 
   const owner = await db.query.user.findFirst({
     where: () => eq(schema.user.id, config.ownerUserId),
