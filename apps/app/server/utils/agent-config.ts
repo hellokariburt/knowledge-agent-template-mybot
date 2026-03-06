@@ -23,13 +23,21 @@ const DEFAULT_CONFIG: AgentConfigData = {
 const CACHE_TTL_SECONDS = 60 // 1 minute
 
 export async function invalidateAgentConfigCache(): Promise<void> {
-  await kv.del(KV_KEYS.AGENT_CONFIG_CACHE)
+  try {
+    await kv.del(KV_KEYS.AGENT_CONFIG_CACHE)
+  } catch {
+    // Ignore cache invalidation failures in environments without writable KV.
+  }
 }
 
 export async function getAgentConfig(): Promise<AgentConfigData> {
-  const cached = await kv.get<AgentConfigData>(KV_KEYS.AGENT_CONFIG_CACHE)
-  if (cached) {
-    return cached
+  try {
+    const cached = await kv.get<AgentConfigData>(KV_KEYS.AGENT_CONFIG_CACHE)
+    if (cached) {
+      return cached
+    }
+  } catch {
+    // Continue without cache when KV is unavailable.
   }
 
   const config = await db.query.agentConfig.findFirst({
@@ -56,7 +64,11 @@ export async function getAgentConfig(): Promise<AgentConfigData> {
     result = DEFAULT_CONFIG
   }
 
-  await kv.set(KV_KEYS.AGENT_CONFIG_CACHE, result, { ttl: CACHE_TTL_SECONDS })
+  try {
+    await kv.set(KV_KEYS.AGENT_CONFIG_CACHE, result, { ttl: CACHE_TTL_SECONDS })
+  } catch {
+    // Ignore cache write failures in environments without writable KV.
+  }
 
   return result
 }
