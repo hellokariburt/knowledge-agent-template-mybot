@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/discord/gateway",
-      "schedule": "*/9 * * * *"
+      "schedule": "0 2 * * *"
     },
     {
       "path": "/api/_cron/evlog-cleanup",
