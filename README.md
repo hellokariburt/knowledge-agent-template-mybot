@@ -95,6 +95,47 @@ Sandboxes are pooled across users and conversations. When a chat starts, it conn
 | [`@savoir/agent`](./packages/agent) | Agent core: router, prompts, tools, types |
 | [`apps/app`](./apps/app) | Unified [Nuxt](https://nuxt.com) app (chat UI + API + bots) |
 
+## Repo + Deployment Map
+
+This monorepo can host multiple deployable apps, each with a different role.
+
+| Path | Role | Deploy target |
+|------|------|---------------|
+| [`apps/app`](./apps/app) | Main KAT runtime (admin, auth, chat APIs, widget APIs, bot webhooks) | Vercel project (production + preview) |
+| [`packages/sdk`](./packages/sdk) | SDK consumed by external apps | npm/package publish flow |
+| `snapshot repo` (separate GitHub repo) | Output knowledge files used by sandbox/search | GitHub only (not a Vercel app) |
+| `ingestion service` (recommended separate app/project) | Pull external data, normalize, write snapshot commits | Separate Vercel project or worker runtime |
+
+### Should Ingestion Be Separate From KAT?
+
+Yes. Keep ingestion separate from the KAT runtime:
+
+1. Runtime stays stable and focused on serving users.
+2. Ingestion can run on schedules/retries without affecting chat availability.
+3. You can scale ingestion and runtime independently.
+
+### Vercel Deploy Trigger Rules
+
+Vercel deploy behavior depends on your project settings:
+
+1. **Production deployments** happen when you push to the configured **Production Branch** (usually `main`).
+2. **Preview deployments** happen for other branches/PRs if "Automatically expose preview deployments" is enabled.
+3. If Git integration is connected, each push can trigger a build for that branch environment.
+
+So "redeploy every push" is usually:
+
+1. every push to `main` -> new **production** deploy
+2. every push to feature branches -> new **preview** deploy
+
+### Recommended Branch Workflow
+
+1. Keep `main` as production-only.
+2. Do all work in feature branches (`feat/ingestion-pipeline`, etc.).
+3. Validate in Vercel preview.
+4. Merge to `main` when ready for production.
+
+This avoids accidental production deploys while you are iterating quickly.
+
 ## Quick Start
 
 ### Using the SDK
