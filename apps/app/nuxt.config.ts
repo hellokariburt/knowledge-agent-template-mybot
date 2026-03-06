@@ -121,6 +121,17 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    widget: {
+      siteId: '',
+      secret: '',
+      ownerUserId: '',
+      allowedOrigins: '',
+      defaultModel: 'google/gemini-3-flash',
+      name: 'TPG Assistant',
+      welcomeMessage: 'Hi, I can help with points, cards, and travel strategy.',
+      tokenTtlSeconds: 600,
+      rateLimitPerMinute: 20,
+    },
     github: {
       token: '',
       snapshotRepo: '',

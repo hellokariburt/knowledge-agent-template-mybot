@@ -1,0 +1,22 @@
+{
+  "id": "card-aurora-travel-plus",
+  "type": "card",
+  "name": "Aurora Travel Plus Card",
+  "issuer": "Aurora Bank",
+  "network": "Visa",
+  "annual_fee_usd": 95,
+  "welcome_offer": "60,000 bonus points after $3,000 spend in 3 months",
+  "earn_rates": [
+    { "category": "travel_portal", "multiplier": 5 },
+    { "category": "dining", "multiplier": 3 },
+    { "category": "groceries", "multiplier": 2 },
+    { "category": "other", "multiplier": 1 }
+  ],
+  "benefits": [
+    "No foreign transaction fees",
+    "Primary rental car coverage",
+    "Trip delay reimbursement"
+  ],
+  "updated_at": "2026-03-06T09:00:00Z",
+  "source_url": "https://example.test/cards/aurora-travel-plus"
+}

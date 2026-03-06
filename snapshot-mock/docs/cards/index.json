@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-03-06T10:15:00Z",
+  "count": 3,
+  "cards": [
+    {
+      "id": "card-aurora-travel-plus",
+      "name": "Aurora Travel Plus Card",
+      "annual_fee_usd": 95,
+      "path": "docs/cards/aurora-travel-plus.json"
+    },
+    {
+      "id": "card-pioneer-everyday-rewards",
+      "name": "Pioneer Everyday Rewards Card",
+      "annual_fee_usd": 0,
+      "path": "docs/cards/pioneer-everyday-rewards.json"
+    },
+    {
+      "id": "card-skybridge-premium",
+      "name": "SkyBridge Premium Card",
+      "annual_fee_usd": 550,
+      "path": "docs/cards/skybridge-premium.json"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "card-pioneer-everyday-rewards",
+  "type": "card",
+  "name": "Pioneer Everyday Rewards Card",
+  "issuer": "Pioneer Financial",
+  "network": "Mastercard",
+  "annual_fee_usd": 0,
+  "welcome_offer": "20,000 bonus points after $1,000 spend in 3 months",
+  "earn_rates": [
+    { "category": "groceries", "multiplier": 3 },
+    { "category": "gas", "multiplier": 3 },
+    { "category": "streaming", "multiplier": 2 },
+    { "category": "other", "multiplier": 1 }
+  ],
+  "benefits": [
+    "No annual fee",
+    "Cell phone protection",
+    "Intro APR offer (synthetic example)"
+  ],
+  "updated_at": "2026-03-06T09:05:00Z",
+  "source_url": "https://example.test/cards/pioneer-everyday-rewards"
+}

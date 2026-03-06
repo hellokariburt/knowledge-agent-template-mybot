@@ -1,0 +1,143 @@
+:root {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --ink: #0f2238;
+  --muted: #58708a;
+  --line: #dce6f2;
+  --brand: #0076d6;
+  --brand-2: #00a1c9;
+  --accent: #f15b2a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(1200px 400px at 10% -20%, #d8ecff 0%, transparent 65%), var(--bg);
+  color: var(--ink);
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.shell {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+
+.masthead {
+  background: linear-gradient(120deg, var(--brand), var(--brand-2));
+  color: #fff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 73, 135, 0.2);
+}
+
+.masthead h1 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: 0.2px;
+}
+
+.masthead p {
+  margin: 8px 0 0;
+  max-width: 760px;
+  opacity: 0.95;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.label {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.chat-log {
+  min-height: 320px;
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fbfdff;
+  white-space: pre-wrap;
+}
+
+.controls {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.controls input,
+.controls textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.controls textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: var(--ink);
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: #0a182a;
+}
+
+.tip {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.badge {
+  display: inline-block;
+  background: #fff2ec;
+  color: var(--accent);
+  border: 1px solid #ffd7c9;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 920px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "card-skybridge-premium",
+  "type": "card",
+  "name": "SkyBridge Premium Card",
+  "issuer": "SkyBridge Capital Bank",
+  "network": "American Express",
+  "annual_fee_usd": 550,
+  "welcome_offer": "110,000 bonus points after $8,000 spend in 6 months",
+  "earn_rates": [
+    { "category": "airfare_direct", "multiplier": 5 },
+    { "category": "hotels_direct", "multiplier": 5 },
+    { "category": "dining", "multiplier": 3 },
+    { "category": "other", "multiplier": 1 }
+  ],
+  "benefits": [
+    "Airport lounge access program",
+    "Global entry/TSA credit",
+    "Annual travel credit (synthetic example)"
+  ],
+  "updated_at": "2026-03-06T09:10:00Z",
+  "source_url": "https://example.test/cards/skybridge-premium"
+}
