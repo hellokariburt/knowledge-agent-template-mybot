@@ -1,30 +1,26 @@
-import { promises as fs } from 'node:fs'
-import path from 'node:path'
 import { NextResponse } from 'next/server'
+import articles from '@/fixtures/articles-rag/index.json'
+import cards from '@/fixtures/cards-rag/index.json'
 
-async function readIndex(relativePath: string): Promise<{ count: number, items: Array<Record<string, unknown>> }> {
-  const filePath = path.join(process.cwd(), relativePath)
-  const raw = await fs.readFile(filePath, 'utf8')
-  return JSON.parse(raw) as { count: number, items: Array<Record<string, unknown>> }
-}
+type IndexData = { count: number, items: Array<Record<string, unknown>> }
 
 export async function POST() {
   try {
-    const articles = await readIndex('fixtures/articles-rag/index.json')
-    const cards = await readIndex('fixtures/cards-rag/index.json')
+    const articleIndex = articles as IndexData
+    const cardIndex = cards as IndexData
 
     // Dry-run output: this is the contract your real ingestion run should produce.
     return NextResponse.json({
       status: 'ok',
       dryRun: true,
       summary: {
-        articles: articles.count,
-        cards: cards.count,
-        total: articles.count + cards.count,
+        articles: articleIndex.count,
+        cards: cardIndex.count,
+        total: articleIndex.count + cardIndex.count,
       },
       sample: {
-        article: articles.items[0] ?? null,
-        card: cards.items[0] ?? null,
+        article: articleIndex.items[0] ?? null,
+        card: cardIndex.items[0] ?? null,
       },
       next: [
         'replace fixture reader with WP/EKS fetch adapters',
