@@ -18,6 +18,7 @@ This app is the starting point for your ingestion pipeline.
 - Persists run state in Postgres (`ingestion_runs`, `sync_state`)
 - Enforces one active run lock per source/environment
 - Supports idempotency via `x-idempotency-key` on manual runs
+- Supports source selection on manual runs (`all`, `articles`, `cards`)
 
 ## Quick start
 
@@ -31,6 +32,12 @@ Test:
 
 ```bash
 curl -X POST http://localhost:3000/api/ingest/run
+```
+
+Run only one source:
+
+```bash
+curl -X POST "http://localhost:3000/api/ingest/run?source=articles"
 ```
 
 ## Scheduling
@@ -58,5 +65,14 @@ Manual run with idempotency key:
 ```bash
 curl -X POST \
   -H "x-idempotency-key: ingest-manual-2026-03-09" \
+  http://localhost:3000/api/ingest/run
+```
+
+Manual run with JSON body source:
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"source":"cards"}' \
   http://localhost:3000/api/ingest/run
 ```

@@ -1,8 +1,9 @@
 import articles from '@/fixtures/articles-rag/index.json'
 import cards from '@/fixtures/cards-rag/index.json'
-import { finishRunFailed, finishRunSuccess, startRun } from '@/lib/ingestion/state'
+import { finishRunFailed, finishRunSuccess, getSyncState, startRun } from '@/lib/ingestion/state'
 
 export type IngestionTrigger = 'manual' | 'cron'
+export type IngestionSource = 'all' | 'articles' | 'cards'
 
 type IndexData = { count: number, items: Array<Record<string, unknown>> }
 
@@ -14,6 +15,15 @@ export type IngestionRunResult = {
   trigger: IngestionTrigger
   mode: 'started' | 'duplicate' | 'locked'
   environment: string
+  source: IngestionSource
+  cursor: {
+    articles: string | null
+    cards: string | null
+  }
+  watermark: {
+    articles: string | null
+    cards: string | null
+  }
   summary: {
     articles: number
     cards: number
@@ -29,15 +39,18 @@ export type IngestionRunResult = {
 type RunIngestionInput = {
   trigger: IngestionTrigger
   runKey: string
-  sourceKey?: string
+  source: IngestionSource
 }
 
 export async function runIngestion(input: RunIngestionInput): Promise<IngestionRunResult> {
   const articleIndex = articles as IndexData
   const cardIndex = cards as IndexData
-  const sourceKey = input.sourceKey ?? 'all'
+  const sourceKey = input.source
   const environment = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? 'development'
   const runId = crypto.randomUUID()
+
+  const articleState = await getSyncState('articles')
+  const cardState = await getSyncState('cards')
 
   const runStart = await startRun({
     runId,
@@ -56,6 +69,15 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
       trigger: input.trigger,
       mode: 'locked',
       environment,
+      source: input.source,
+      cursor: {
+        articles: articleState?.cursor_token ?? null,
+        cards: cardState?.cursor_token ?? null,
+      },
+      watermark: {
+        articles: articleState?.watermark_ts ?? null,
+        cards: cardState?.watermark_ts ?? null,
+      },
       summary: {
         articles: 0,
         cards: 0,
@@ -81,6 +103,15 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
       trigger: input.trigger,
       mode: 'duplicate',
       environment,
+      source: input.source,
+      cursor: {
+        articles: articleState?.cursor_token ?? null,
+        cards: cardState?.cursor_token ?? null,
+      },
+      watermark: {
+        articles: articleState?.watermark_ts ?? null,
+        cards: cardState?.watermark_ts ?? null,
+      },
       summary: {
         articles: 0,
         cards: 0,
@@ -98,6 +129,16 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
   }
 
   try {
+    const includeArticles = input.source === 'all' || input.source === 'articles'
+    const includeCards = input.source === 'all' || input.source === 'cards'
+    const sourceKeysToUpdate = [
+      ...(includeArticles ? ['articles'] : []),
+      ...(includeCards ? ['cards'] : []),
+    ]
+
+    const articleCount = includeArticles ? articleIndex.count : 0
+    const cardCount = includeCards ? cardIndex.count : 0
+
     const result: IngestionRunResult = {
       status: 'ok',
       dryRun: true,
@@ -106,14 +147,23 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
       trigger: input.trigger,
       mode: 'started',
       environment,
+      source: input.source,
+      cursor: {
+        articles: articleState?.cursor_token ?? null,
+        cards: cardState?.cursor_token ?? null,
+      },
+      watermark: {
+        articles: articleState?.watermark_ts ?? null,
+        cards: cardState?.watermark_ts ?? null,
+      },
       summary: {
-        articles: articleIndex.count,
-        cards: cardIndex.count,
-        total: articleIndex.count + cardIndex.count,
+        articles: articleCount,
+        cards: cardCount,
+        total: articleCount + cardCount,
       },
       sample: {
-        article: articleIndex.items[0] ?? null,
-        card: cardIndex.items[0] ?? null,
+        article: includeArticles ? (articleIndex.items[0] ?? null) : null,
+        card: includeCards ? (cardIndex.items[0] ?? null) : null,
       },
       next: [
         'replace fixture reader with WP/EKS fetch adapters',
@@ -125,12 +175,13 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
 
     await finishRunSuccess({
       runId: runStart.runId,
-      sourceKey,
+      sourceKeys: sourceKeysToUpdate,
       articlesCount: result.summary.articles,
       cardsCount: result.summary.cards,
       metadata: {
         dryRun: result.dryRun,
         trigger: result.trigger,
+        source: result.source,
       },
     })
 

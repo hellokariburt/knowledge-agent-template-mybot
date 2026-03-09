@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     return NextResponse.json(await runIngestion({
       trigger: 'cron',
       runKey: `cron-all-${utcDay}`,
-      sourceKey: 'all',
+      source: 'all',
     }))
   } catch (error) {
     return NextResponse.json(

@@ -13,6 +13,14 @@ type ExistingRunRow = {
   status: RunStatus
 }
 
+export type SyncStateRow = {
+  source_key: string
+  cursor_token: string | null
+  watermark_ts: string | null
+  last_success_at: string | null
+  updated_at: string
+}
+
 export async function startRun(input: {
   runId: string
   runKey: string
@@ -79,7 +87,7 @@ export async function startRun(input: {
 
 export async function finishRunSuccess(input: {
   runId: string
-  sourceKey: string
+  sourceKeys: string[]
   articlesCount: number
   cardsCount: number
   metadata?: Record<string, unknown>
@@ -95,16 +103,18 @@ export async function finishRunSuccess(input: {
     [input.runId, input.articlesCount, input.cardsCount, JSON.stringify(input.metadata ?? {})],
   )
 
-  await query(
-    `INSERT INTO sync_state (source_key, watermark_ts, last_success_at, updated_at)
-     VALUES ($1, NOW(), NOW(), NOW())
-     ON CONFLICT (source_key)
-     DO UPDATE SET
-       watermark_ts = EXCLUDED.watermark_ts,
-       last_success_at = EXCLUDED.last_success_at,
-       updated_at = NOW()`,
-    [input.sourceKey],
-  )
+  for (const sourceKey of input.sourceKeys) {
+    await query(
+      `INSERT INTO sync_state (source_key, watermark_ts, last_success_at, updated_at)
+       VALUES ($1, NOW(), NOW(), NOW())
+       ON CONFLICT (source_key)
+       DO UPDATE SET
+         watermark_ts = EXCLUDED.watermark_ts,
+         last_success_at = EXCLUDED.last_success_at,
+         updated_at = NOW()`,
+      [sourceKey],
+    )
+  }
 }
 
 export async function finishRunFailed(input: { runId: string, errorText: string, metadata?: Record<string, unknown> }) {
@@ -117,4 +127,18 @@ export async function finishRunFailed(input: { runId: string, errorText: string,
       WHERE id = $1`,
     [input.runId, input.errorText, JSON.stringify(input.metadata ?? {})],
   )
+}
+
+export async function getSyncState(sourceKey: string): Promise<SyncStateRow | null> {
+  await ensureSchema()
+
+  const result = await query<SyncStateRow>(
+    `SELECT source_key, cursor_token, watermark_ts, last_success_at, updated_at
+       FROM sync_state
+      WHERE source_key = $1
+      LIMIT 1`,
+    [sourceKey],
+  )
+
+  return result.rows[0] ?? null
 }
