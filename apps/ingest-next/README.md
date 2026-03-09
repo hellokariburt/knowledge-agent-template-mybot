@@ -21,6 +21,7 @@ This app is the starting point for your ingestion pipeline.
 - Supports source selection on manual runs (`all`, `articles`, `cards`)
 - Returns reconciliation dry-run (`add`, `update`, `delete`) with sample output paths
 - Supports `dryRun` toggle (`true` default for manual runs)
+- Supports `publishMode` (`dry-run` default, `local` to write output files)
 
 ## Quick start
 
@@ -46,6 +47,12 @@ Apply manifest changes (non-dry-run):
 
 ```bash
 curl -X POST "http://localhost:3000/api/ingest/run?source=articles&dryRun=false"
+```
+
+Local file output publish:
+
+```bash
+curl -X POST "http://localhost:3000/api/ingest/run?source=articles&dryRun=true&publishMode=local"
 ```
 
 ## Scheduling
@@ -97,3 +104,10 @@ Reconciliation behavior:
 1. The run response includes file-operation plan counts (`reconciliation.add|update|delete`).
 2. This compares deterministic normalized docs against `snapshot_manifest` in Postgres.
 3. `dryRun=false` applies manifest state changes in Postgres (still no git publish yet).
+
+Publish behavior:
+
+1. `publishMode=dry-run` returns planned write/delete counts without filesystem changes.
+2. `publishMode=local` writes deterministic output files under:
+   - `INGEST_OUTPUT_DIR` if set, else
+   - `./.ingest-output` locally, or `/tmp/ingest-output` on Vercel.

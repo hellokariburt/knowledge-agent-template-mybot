@@ -173,6 +173,7 @@ export async function getSnapshotManifestBySources(
 export async function applySnapshotManifestForSource(input: {
   sourceKey: 'articles' | 'cards'
   desiredEntries: Array<{ filePath: string, contentHash: string }>
+  pruneMissing: boolean
 }) {
   await ensureSchema()
 
@@ -190,20 +191,22 @@ export async function applySnapshotManifestForSource(input: {
       )
     }
 
-    if (input.desiredEntries.length === 0) {
-      await query(
-        `DELETE FROM snapshot_manifest
-          WHERE source_key = $1`,
-        [input.sourceKey],
-      )
-    } else {
-      const keepPaths = input.desiredEntries.map((entry) => entry.filePath)
-      await query(
-        `DELETE FROM snapshot_manifest
-          WHERE source_key = $1
-            AND NOT (file_path = ANY($2::text[]))`,
-        [input.sourceKey, keepPaths],
-      )
+    if (input.pruneMissing) {
+      if (input.desiredEntries.length === 0) {
+        await query(
+          `DELETE FROM snapshot_manifest
+            WHERE source_key = $1`,
+          [input.sourceKey],
+        )
+      } else {
+        const keepPaths = input.desiredEntries.map((entry) => entry.filePath)
+        await query(
+          `DELETE FROM snapshot_manifest
+            WHERE source_key = $1
+              AND NOT (file_path = ANY($2::text[]))`,
+          [input.sourceKey, keepPaths],
+        )
+      }
     }
 
     await query('COMMIT')

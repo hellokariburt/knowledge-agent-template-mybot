@@ -1,6 +1,7 @@
 import { getConnector } from '@/lib/ingestion/connectors'
 import type { IngestionRecord } from '@/lib/ingestion/connectors/types'
 import { normalizeArticle, normalizeCard } from '@/lib/ingestion/normalize'
+import { publishOutput, type PublishMode } from '@/lib/ingestion/publish'
 import { buildReconciliationPlan } from '@/lib/ingestion/reconcile'
 import { applySnapshotManifestForSource, finishRunFailed, finishRunSuccess, getSnapshotManifestBySources, getSyncState, startRun } from '@/lib/ingestion/state'
 
@@ -41,6 +42,15 @@ export type IngestionRunResult = {
       delete: string[]
     }
   }
+  publish: {
+    mode: PublishMode
+    applied: boolean
+    outputDir: string | null
+    written: number
+    deleted: number
+    sampleWritten: string[]
+    sampleDeleted: string[]
+  }
   sample: {
     article: Record<string, unknown> | null
     card: Record<string, unknown> | null
@@ -53,6 +63,7 @@ type RunIngestionInput = {
   runKey: string
   source: IngestionSource
   dryRun: boolean
+  publishMode: PublishMode
 }
 
 type SourceResult = {
@@ -158,6 +169,15 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         'another run is active for this source/environment',
         'retry this trigger after the active run completes',
       ],
+      publish: {
+        mode: input.publishMode,
+        applied: false,
+        outputDir: null,
+        written: 0,
+        deleted: 0,
+        sampleWritten: [],
+        sampleDeleted: [],
+      },
     }
   }
 
@@ -204,6 +224,15 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         `idempotency key already used (existing run status: ${runStart.status})`,
         'use a new run key for a fresh run',
       ],
+      publish: {
+        mode: input.publishMode,
+        applied: false,
+        outputDir: null,
+        written: 0,
+        deleted: 0,
+        sampleWritten: [],
+        sampleDeleted: [],
+      },
     }
   }
 
@@ -237,6 +266,10 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         ...(includeCards ? (['cards'] as const) : []),
       ],
     )
+    const articleFullCoverage = includeArticles && !articleState?.watermark_ts && !articleState?.cursor_token
+    const cardFullCoverage = includeCards && !cardState?.watermark_ts && !cardState?.cursor_token
+    const includeDeletes = (includeArticles ? articleFullCoverage : true) && (includeCards ? cardFullCoverage : true)
+
     const plan = buildReconciliationPlan({
       desiredDocs,
       existingEntries: manifest.map((entry) => ({
@@ -244,6 +277,7 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         filePath: entry.file_path,
         contentHash: entry.content_hash,
       })),
+      includeDeletes,
     })
 
     const result: IngestionRunResult = {
@@ -290,7 +324,22 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         'publish reconciliation to snapshot repo (add/update/delete)',
         'trigger KAT /api/sync after successful publish',
       ],
+      publish: {
+        mode: input.publishMode,
+        applied: false,
+        outputDir: null,
+        written: 0,
+        deleted: 0,
+        sampleWritten: [],
+        sampleDeleted: [],
+      },
     }
+
+    result.publish = await publishOutput({
+      mode: input.publishMode,
+      desiredDocs,
+      plan,
+    })
 
     const sourceUpdates: Array<{ sourceKey: string, cursorToken: string | null, watermarkTs: string | null }> = []
     if (includeArticles) {
@@ -315,6 +364,7 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
           desiredEntries: desiredDocs
             .filter((doc) => doc.sourceKey === 'articles')
             .map((doc) => ({ filePath: doc.path, contentHash: doc.contentHash })),
+          pruneMissing: articleFullCoverage,
         })
       }
 
@@ -324,6 +374,7 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
           desiredEntries: desiredDocs
             .filter((doc) => doc.sourceKey === 'cards')
             .map((doc) => ({ filePath: doc.path, contentHash: doc.contentHash })),
+          pruneMissing: cardFullCoverage,
         })
       }
 
@@ -341,6 +392,7 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         source: result.source,
         connector: result.connector,
         reconciliation: result.reconciliation,
+        publish: result.publish,
       },
     })
 

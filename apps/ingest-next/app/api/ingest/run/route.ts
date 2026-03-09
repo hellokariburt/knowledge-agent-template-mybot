@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { runIngestion, type IngestionSource } from '@/lib/ingestion/run'
+import type { PublishMode } from '@/lib/ingestion/publish'
 
 function getRunKey(request: Request): string {
   const incoming = request.headers.get('x-idempotency-key')?.trim()
@@ -19,10 +20,17 @@ function parseDryRun(value: unknown): boolean | null {
   return null
 }
 
+function parsePublishMode(value: unknown): PublishMode | null {
+  if (value === undefined || value === null || value === '') return 'dry-run'
+  if (value === 'dry-run' || value === 'local') return value
+  return null
+}
+
 export async function POST(request: Request) {
   try {
     let source: IngestionSource = 'all'
     let dryRun = true
+    let publishMode: PublishMode = 'dry-run'
     const url = new URL(request.url)
     const sourceFromQuery = parseSource(url.searchParams.get('source'))
     if (sourceFromQuery === null) {
@@ -34,8 +42,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ status: 'error', message: 'Invalid dryRun query param' }, { status: 400 })
     }
     dryRun = dryRunFromQuery
+    const publishModeFromQuery = parsePublishMode(url.searchParams.get('publishMode'))
+    if (publishModeFromQuery === null) {
+      return NextResponse.json({ status: 'error', message: 'Invalid publishMode query param' }, { status: 400 })
+    }
+    publishMode = publishModeFromQuery
 
-    if (!url.searchParams.has('source') || !url.searchParams.has('dryRun')) {
+    if (!url.searchParams.has('source') || !url.searchParams.has('dryRun') || !url.searchParams.has('publishMode')) {
       const contentType = request.headers.get('content-type') ?? ''
       if (contentType.includes('application/json')) {
         const body = await request.json().catch(() => ({} as Record<string, unknown>))
@@ -53,6 +66,13 @@ export async function POST(request: Request) {
           }
           dryRun = dryRunFromBody
         }
+        if (!url.searchParams.has('publishMode')) {
+          const publishModeFromBody = parsePublishMode(body?.publishMode)
+          if (publishModeFromBody === null) {
+            return NextResponse.json({ status: 'error', message: 'Invalid publishMode in request body' }, { status: 400 })
+          }
+          publishMode = publishModeFromBody
+        }
       }
     }
 
@@ -61,6 +81,7 @@ export async function POST(request: Request) {
       runKey: getRunKey(request),
       source,
       dryRun,
+      publishMode,
     }))
   } catch (error) {
     return NextResponse.json(

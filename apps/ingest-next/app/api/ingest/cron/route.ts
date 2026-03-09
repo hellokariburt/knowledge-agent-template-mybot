@@ -24,6 +24,7 @@ export async function GET(request: Request) {
       runKey: `cron-all-${utcDay}`,
       source: 'all',
       dryRun: false,
+      publishMode: 'dry-run',
     }))
   } catch (error) {
     return NextResponse.json(

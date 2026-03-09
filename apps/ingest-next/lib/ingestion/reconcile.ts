@@ -15,6 +15,7 @@ export type ReconciliationPlan = {
 export function buildReconciliationPlan(input: {
   desiredDocs: DeterministicDoc[]
   existingEntries: ManifestEntry[]
+  includeDeletes: boolean
 }): ReconciliationPlan {
   const desiredByPath = new Map(input.desiredDocs.map((doc) => [doc.path, doc]))
   const existingByPath = new Map(input.existingEntries.map((entry) => [entry.filePath, entry]))
@@ -34,9 +35,11 @@ export function buildReconciliationPlan(input: {
     }
   }
 
-  for (const path of existingByPath.keys()) {
-    if (!desiredByPath.has(path)) {
-      del.push(path)
+  if (input.includeDeletes) {
+    for (const path of existingByPath.keys()) {
+      if (!desiredByPath.has(path)) {
+        del.push(path)
+      }
     }
   }
 
