@@ -228,3 +228,69 @@ export async function logRunEvent(input: {
     [input.runId, input.eventType, JSON.stringify(input.payload ?? {})],
   )
 }
+
+type IngestionRunRow = {
+  id: string
+  run_key: string
+  source_key: string
+  environment: string
+  trigger: string
+  status: string
+  started_at: string
+  ended_at: string | null
+  articles_count: number
+  cards_count: number
+  error_text: string | null
+  metadata: Record<string, unknown>
+}
+
+type IngestionRunEventRow = {
+  id: string
+  run_id: string
+  event_type: string
+  payload: Record<string, unknown>
+  created_at: string
+}
+
+export async function getRecentRuns(limit = 10): Promise<IngestionRunRow[]> {
+  await ensureSchema()
+  const capped = Math.min(Math.max(limit, 1), 100)
+  const result = await query<IngestionRunRow>(
+    `SELECT
+       id,
+       run_key,
+       source_key,
+       environment,
+       trigger,
+       status,
+       started_at,
+       ended_at,
+       articles_count,
+       cards_count,
+       error_text,
+       metadata
+     FROM ingestion_runs
+     ORDER BY started_at DESC
+     LIMIT $1`,
+    [capped],
+  )
+  return result.rows
+}
+
+export async function getRecentRunEvents(limit = 25): Promise<IngestionRunEventRow[]> {
+  await ensureSchema()
+  const capped = Math.min(Math.max(limit, 1), 200)
+  const result = await query<IngestionRunEventRow>(
+    `SELECT
+       id,
+       run_id,
+       event_type,
+       payload,
+       created_at
+     FROM ingestion_run_events
+     ORDER BY created_at DESC
+     LIMIT $1`,
+    [capped],
+  )
+  return result.rows
+}

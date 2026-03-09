@@ -72,6 +72,7 @@ Set these env vars in Vercel for this project:
 - `DATABASE_URL` (Neon/Postgres connection string)
 - `CRON_SECRET` (shared secret for cron endpoint auth)
 - `INGEST_MANUAL_SECRET` (optional; required bearer token for manual privileged runs: `dryRun=false` or `publishMode!=dry-run`)
+- `INGEST_STATUS_SECRET` (optional; bearer token for `/api/ingest/status`)
 - `PGSSLMODE=disable` (optional for local/non-SSL Postgres only)
 - `INGEST_CONNECTOR=mock` (default; connector implementation selector)
 - `INGEST_CRON_PUBLISH_MODE` (`dry-run` default; can be `local` or `git`)
@@ -105,6 +106,13 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"source":"cards"}' \
   http://localhost:3000/api/ingest/run
+```
+
+Status endpoint:
+
+```bash
+curl -H "Authorization: Bearer $INGEST_STATUS_SECRET" \
+  "http://localhost:3000/api/ingest/status?runs=10&events=25"
 ```
 
 Incremental behavior with mock connector:
