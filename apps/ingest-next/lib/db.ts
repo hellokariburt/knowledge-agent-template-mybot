@@ -75,5 +75,15 @@ export async function ensureSchema(): Promise<void> {
     );
   `)
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS ingestion_run_events (
+      id BIGSERIAL PRIMARY KEY,
+      run_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `)
+
   schemaReady = true
 }

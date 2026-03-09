@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { runIngestion } from '@/lib/ingestion/run'
+import type { PublishMode } from '@/lib/ingestion/publish'
 
 function isAuthorized(request: Request): boolean {
   const expectedSecret = process.env.CRON_SECRET
@@ -7,6 +8,12 @@ function isAuthorized(request: Request): boolean {
 
   const authHeader = request.headers.get('authorization')
   return authHeader === `Bearer ${expectedSecret}`
+}
+
+function getCronPublishMode(): PublishMode {
+  const value = process.env.INGEST_CRON_PUBLISH_MODE
+  if (value === 'local' || value === 'git' || value === 'dry-run') return value
+  return 'dry-run'
 }
 
 export async function GET(request: Request) {
@@ -19,12 +26,13 @@ export async function GET(request: Request) {
 
   try {
     const utcDay = new Date().toISOString().slice(0, 10)
+    const publishMode = getCronPublishMode()
     return NextResponse.json(await runIngestion({
       trigger: 'cron',
       runKey: `cron-all-${utcDay}`,
       source: 'all',
       dryRun: false,
-      publishMode: 'dry-run',
+      publishMode,
     }))
   } catch (error) {
     return NextResponse.json(

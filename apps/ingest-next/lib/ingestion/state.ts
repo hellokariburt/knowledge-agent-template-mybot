@@ -215,3 +215,16 @@ export async function applySnapshotManifestForSource(input: {
     throw error
   }
 }
+
+export async function logRunEvent(input: {
+  runId: string
+  eventType: string
+  payload?: Record<string, unknown>
+}) {
+  await ensureSchema()
+  await query(
+    `INSERT INTO ingestion_run_events (run_id, event_type, payload)
+     VALUES ($1, $2, $3::jsonb)`,
+    [input.runId, input.eventType, JSON.stringify(input.payload ?? {})],
+  )
+}

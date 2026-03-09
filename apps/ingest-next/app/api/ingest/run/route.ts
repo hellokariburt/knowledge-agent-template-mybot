@@ -22,7 +22,7 @@ function parseDryRun(value: unknown): boolean | null {
 
 function parsePublishMode(value: unknown): PublishMode | null {
   if (value === undefined || value === null || value === '') return 'dry-run'
-  if (value === 'dry-run' || value === 'local') return value
+  if (value === 'dry-run' || value === 'local' || value === 'git') return value
   return null
 }
 
@@ -72,6 +72,19 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: 'error', message: 'Invalid publishMode in request body' }, { status: 400 })
           }
           publishMode = publishModeFromBody
+        }
+      }
+    }
+
+    if (!dryRun || publishMode !== 'dry-run') {
+      const expectedToken = process.env.INGEST_MANUAL_SECRET
+      if (expectedToken) {
+        const authHeader = request.headers.get('authorization')
+        if (authHeader !== `Bearer ${expectedToken}`) {
+          return NextResponse.json(
+            { status: 'error', message: 'Unauthorized manual privileged trigger' },
+            { status: 401 },
+          )
         }
       }
     }

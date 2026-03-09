@@ -21,7 +21,7 @@ This app is the starting point for your ingestion pipeline.
 - Supports source selection on manual runs (`all`, `articles`, `cards`)
 - Returns reconciliation dry-run (`add`, `update`, `delete`) with sample output paths
 - Supports `dryRun` toggle (`true` default for manual runs)
-- Supports `publishMode` (`dry-run` default, `local` to write output files)
+- Supports `publishMode` (`dry-run` default, `local` or `git`)
 
 ## Quick start
 
@@ -46,7 +46,9 @@ curl -X POST "http://localhost:3000/api/ingest/run?source=articles"
 Apply manifest changes (non-dry-run):
 
 ```bash
-curl -X POST "http://localhost:3000/api/ingest/run?source=articles&dryRun=false"
+curl -X POST \
+  -H "Authorization: Bearer $INGEST_MANUAL_SECRET" \
+  "http://localhost:3000/api/ingest/run?source=articles&dryRun=false"
 ```
 
 Local file output publish:
@@ -55,14 +57,26 @@ Local file output publish:
 curl -X POST "http://localhost:3000/api/ingest/run?source=articles&dryRun=true&publishMode=local"
 ```
 
+Git publish:
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer $INGEST_MANUAL_SECRET" \
+  "http://localhost:3000/api/ingest/run?source=all&dryRun=false&publishMode=git"
+```
+
 ## Scheduling
 
 Set these env vars in Vercel for this project:
 
 - `DATABASE_URL` (Neon/Postgres connection string)
 - `CRON_SECRET` (shared secret for cron endpoint auth)
+- `INGEST_MANUAL_SECRET` (optional; required bearer token for manual privileged runs: `dryRun=false` or `publishMode!=dry-run`)
 - `PGSSLMODE=disable` (optional for local/non-SSL Postgres only)
 - `INGEST_CONNECTOR=mock` (default; connector implementation selector)
+- `INGEST_CRON_PUBLISH_MODE` (`dry-run` default; can be `local` or `git`)
+- `SNAPSHOT_REPO_URL` + `SNAPSHOT_REPO_TOKEN` + `SNAPSHOT_REPO_BRANCH` (required for `publishMode=git`)
+- `KAT_SYNC_URL` + `KAT_SYNC_TOKEN` (optional; trigger KAT sync after successful non-dry-run publish)
 Vercel will call:
 
 - `GET /api/ingest/cron` once daily (`0 9 * * *`, UTC)
@@ -103,7 +117,7 @@ Reconciliation behavior:
 
 1. The run response includes file-operation plan counts (`reconciliation.add|update|delete`).
 2. This compares deterministic normalized docs against `snapshot_manifest` in Postgres.
-3. `dryRun=false` applies manifest state changes in Postgres (still no git publish yet).
+3. `dryRun=false` applies manifest state changes in Postgres.
 
 Publish behavior:
 
@@ -111,3 +125,4 @@ Publish behavior:
 2. `publishMode=local` writes deterministic output files under:
    - `INGEST_OUTPUT_DIR` if set, else
    - `./.ingest-output` locally, or `/tmp/ingest-output` on Vercel.
+3. `publishMode=git` clones snapshot repo, applies file changes, commits, and pushes.

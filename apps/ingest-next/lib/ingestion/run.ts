@@ -3,7 +3,8 @@ import type { IngestionRecord } from '@/lib/ingestion/connectors/types'
 import { normalizeArticle, normalizeCard } from '@/lib/ingestion/normalize'
 import { publishOutput, type PublishMode } from '@/lib/ingestion/publish'
 import { buildReconciliationPlan } from '@/lib/ingestion/reconcile'
-import { applySnapshotManifestForSource, finishRunFailed, finishRunSuccess, getSnapshotManifestBySources, getSyncState, startRun } from '@/lib/ingestion/state'
+import { triggerKatSync } from '@/lib/ingestion/sync'
+import { applySnapshotManifestForSource, finishRunFailed, finishRunSuccess, getSnapshotManifestBySources, getSyncState, logRunEvent, startRun } from '@/lib/ingestion/state'
 
 export type IngestionTrigger = 'manual' | 'cron'
 export type IngestionSource = 'all' | 'articles' | 'cards'
@@ -50,6 +51,13 @@ export type IngestionRunResult = {
     deleted: number
     sampleWritten: string[]
     sampleDeleted: string[]
+  }
+  sync: {
+    attempted: boolean
+    success: boolean
+    statusCode: number | null
+    url: string | null
+    message: string
   }
   sample: {
     article: Record<string, unknown> | null
@@ -178,6 +186,13 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         sampleWritten: [],
         sampleDeleted: [],
       },
+      sync: {
+        attempted: false,
+        success: false,
+        statusCode: null,
+        url: null,
+        message: 'sync skipped',
+      },
     }
   }
 
@@ -233,10 +248,23 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         sampleWritten: [],
         sampleDeleted: [],
       },
+      sync: {
+        attempted: false,
+        success: false,
+        statusCode: null,
+        url: null,
+        message: 'sync skipped',
+      },
     }
   }
 
   try {
+    await logRunEvent({
+      runId: runStart.runId,
+      eventType: 'run.started',
+      payload: { source: input.source, dryRun: input.dryRun, publishMode: input.publishMode },
+    })
+
     const includeArticles = input.source === 'all' || input.source === 'articles'
     const includeCards = input.source === 'all' || input.source === 'cards'
 
@@ -333,12 +361,20 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         sampleWritten: [],
         sampleDeleted: [],
       },
+      sync: {
+        attempted: false,
+        success: false,
+        statusCode: null,
+        url: null,
+        message: 'sync skipped',
+      },
     }
 
     result.publish = await publishOutput({
       mode: input.publishMode,
       desiredDocs,
       plan,
+      runId: runStart.runId,
     })
 
     const sourceUpdates: Array<{ sourceKey: string, cursorToken: string | null, watermarkTs: string | null }> = []
@@ -381,6 +417,26 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
       result.applied = true
     }
 
+    if (!input.dryRun && result.publish.applied) {
+      result.sync = await triggerKatSync({
+        runId: runStart.runId,
+        source: input.source,
+      })
+    }
+
+    await logRunEvent({
+      runId: runStart.runId,
+      eventType: 'run.completed',
+      payload: {
+        source: input.source,
+        dryRun: result.dryRun,
+        applied: result.applied,
+        reconciliation: result.reconciliation,
+        publish: result.publish,
+        sync: result.sync,
+      },
+    })
+
     await finishRunSuccess({
       runId: runStart.runId,
       sourceUpdates,
@@ -398,6 +454,15 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
 
     return result
   } catch (error) {
+    await logRunEvent({
+      runId: runStart.runId,
+      eventType: 'run.failed',
+      payload: {
+        source: input.source,
+        message: error instanceof Error ? error.message : String(error),
+      },
+    })
+
     await finishRunFailed({
       runId: runStart.runId,
       errorText: error instanceof Error ? error.message : String(error),
