@@ -1,6 +1,8 @@
 import { getConnector } from '@/lib/ingestion/connectors'
 import type { IngestionRecord } from '@/lib/ingestion/connectors/types'
-import { finishRunFailed, finishRunSuccess, getSyncState, startRun } from '@/lib/ingestion/state'
+import { normalizeArticle, normalizeCard } from '@/lib/ingestion/normalize'
+import { buildReconciliationPlan } from '@/lib/ingestion/reconcile'
+import { finishRunFailed, finishRunSuccess, getSnapshotManifestBySources, getSyncState, startRun } from '@/lib/ingestion/state'
 
 export type IngestionTrigger = 'manual' | 'cron'
 export type IngestionSource = 'all' | 'articles' | 'cards'
@@ -27,6 +29,16 @@ export type IngestionRunResult = {
     articles: number
     cards: number
     total: number
+  }
+  reconciliation: {
+    add: number
+    update: number
+    delete: number
+    samplePaths: {
+      add: string[]
+      update: string[]
+      delete: string[]
+    }
   }
   sample: {
     article: Record<string, unknown> | null
@@ -125,6 +137,16 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         cards: 0,
         total: 0,
       },
+      reconciliation: {
+        add: 0,
+        update: 0,
+        delete: 0,
+        samplePaths: {
+          add: [],
+          update: [],
+          delete: [],
+        },
+      },
       sample: {
         article: null,
         card: null,
@@ -160,6 +182,16 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         cards: 0,
         total: 0,
       },
+      reconciliation: {
+        add: 0,
+        update: 0,
+        delete: 0,
+        samplePaths: {
+          add: [],
+          update: [],
+          delete: [],
+        },
+      },
       sample: {
         article: null,
         card: null,
@@ -191,6 +223,25 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
       })
       : { items: [], finalCursorToken: cardState?.cursor_token ?? null, maxUpdatedAt: cardState?.watermark_ts ?? null }
 
+    const desiredDocs = [
+      ...articleFetch.items.map(normalizeArticle),
+      ...cardFetch.items.map(normalizeCard),
+    ]
+    const manifest = await getSnapshotManifestBySources(
+      [
+        ...(includeArticles ? (['articles'] as const) : []),
+        ...(includeCards ? (['cards'] as const) : []),
+      ],
+    )
+    const plan = buildReconciliationPlan({
+      desiredDocs,
+      existingEntries: manifest.map((entry) => ({
+        sourceKey: entry.source_key as 'articles' | 'cards',
+        filePath: entry.file_path,
+        contentHash: entry.content_hash,
+      })),
+    })
+
     const result: IngestionRunResult = {
       status: 'ok',
       dryRun: true,
@@ -214,13 +265,23 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         cards: cardFetch.items.length,
         total: articleFetch.items.length + cardFetch.items.length,
       },
+      reconciliation: {
+        add: plan.add.length,
+        update: plan.update.length,
+        delete: plan.delete.length,
+        samplePaths: {
+          add: plan.add.slice(0, 5),
+          update: plan.update.slice(0, 5),
+          delete: plan.delete.slice(0, 5),
+        },
+      },
       sample: {
         article: articleFetch.items[0] ?? null,
         card: cardFetch.items[0] ?? null,
       },
       next: [
         'replace mock connector with WP/EKS fetch adapters',
-        'add deterministic writer for docs/articles and docs/cards',
+        'write deterministic docs/articles and docs/cards to workspace',
         'publish reconciliation to snapshot repo (add/update/delete)',
         'trigger KAT /api/sync after successful publish',
       ],
@@ -252,6 +313,7 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         trigger: result.trigger,
         source: result.source,
         connector: result.connector,
+        reconciliation: result.reconciliation,
       },
     })
 

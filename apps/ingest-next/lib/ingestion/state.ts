@@ -21,6 +21,12 @@ export type SyncStateRow = {
   updated_at: string
 }
 
+export type SnapshotManifestRow = {
+  source_key: string
+  file_path: string
+  content_hash: string
+}
+
 export async function startRun(input: {
   runId: string
   runKey: string
@@ -146,4 +152,20 @@ export async function getSyncState(sourceKey: string): Promise<SyncStateRow | nu
   )
 
   return result.rows[0] ?? null
+}
+
+export async function getSnapshotManifestBySources(
+  sourceKeys: Array<'articles' | 'cards'>,
+): Promise<SnapshotManifestRow[]> {
+  await ensureSchema()
+  if (sourceKeys.length === 0) return []
+
+  const result = await query<SnapshotManifestRow>(
+    `SELECT source_key, file_path, content_hash
+       FROM snapshot_manifest
+      WHERE source_key = ANY($1::text[])`,
+    [sourceKeys],
+  )
+
+  return result.rows
 }

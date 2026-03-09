@@ -65,5 +65,15 @@ export async function ensureSchema(): Promise<void> {
     );
   `)
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS snapshot_manifest (
+      source_key TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      content_hash TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (source_key, file_path)
+    );
+  `)
+
   schemaReady = true
 }

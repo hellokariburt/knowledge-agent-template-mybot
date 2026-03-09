@@ -19,6 +19,7 @@ This app is the starting point for your ingestion pipeline.
 - Enforces one active run lock per source/environment
 - Supports idempotency via `x-idempotency-key` on manual runs
 - Supports source selection on manual runs (`all`, `articles`, `cards`)
+- Returns reconciliation dry-run (`add`, `update`, `delete`) with sample output paths
 
 ## Quick start
 
@@ -83,3 +84,9 @@ Incremental behavior with mock connector:
 1. First run ingests fixture rows and stores per-source watermark.
 2. Next run with the same source ingests only rows with `updated_at > watermark`.
 3. With static fixtures, repeated runs should quickly return `summary.total = 0`.
+
+Reconciliation behavior:
+
+1. The run response includes file-operation plan counts (`reconciliation.add|update|delete`).
+2. This compares deterministic normalized docs against `snapshot_manifest` in Postgres.
+3. Current stage is dry-run planning only (no git publish yet).
