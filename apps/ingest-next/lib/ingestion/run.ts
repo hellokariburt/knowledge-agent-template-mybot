@@ -2,7 +2,7 @@ import { getConnector } from '@/lib/ingestion/connectors'
 import type { IngestionRecord } from '@/lib/ingestion/connectors/types'
 import { normalizeArticle, normalizeCard } from '@/lib/ingestion/normalize'
 import { buildReconciliationPlan } from '@/lib/ingestion/reconcile'
-import { finishRunFailed, finishRunSuccess, getSnapshotManifestBySources, getSyncState, startRun } from '@/lib/ingestion/state'
+import { applySnapshotManifestForSource, finishRunFailed, finishRunSuccess, getSnapshotManifestBySources, getSyncState, startRun } from '@/lib/ingestion/state'
 
 export type IngestionTrigger = 'manual' | 'cron'
 export type IngestionSource = 'all' | 'articles' | 'cards'
@@ -10,6 +10,7 @@ export type IngestionSource = 'all' | 'articles' | 'cards'
 export type IngestionRunResult = {
   status: 'ok' | 'skipped'
   dryRun: boolean
+  applied: boolean
   runId: string
   runKey: string
   trigger: IngestionTrigger
@@ -51,6 +52,7 @@ type RunIngestionInput = {
   trigger: IngestionTrigger
   runKey: string
   source: IngestionSource
+  dryRun: boolean
 }
 
 type SourceResult = {
@@ -116,7 +118,8 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
   if (runStart.mode === 'locked') {
     return {
       status: 'skipped',
-      dryRun: true,
+      dryRun: input.dryRun,
+      applied: false,
       runId,
       runKey: input.runKey,
       trigger: input.trigger,
@@ -161,7 +164,8 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
   if (runStart.mode === 'duplicate') {
     return {
       status: 'skipped',
-      dryRun: true,
+      dryRun: input.dryRun,
+      applied: false,
       runId: runStart.runId,
       runKey: input.runKey,
       trigger: input.trigger,
@@ -244,7 +248,8 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
 
     const result: IngestionRunResult = {
       status: 'ok',
-      dryRun: true,
+      dryRun: input.dryRun,
+      applied: false,
       runId: runStart.runId,
       runKey: input.runKey,
       trigger: input.trigger,
@@ -301,6 +306,28 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
         cursorToken: result.cursor.cards,
         watermarkTs: result.watermark.cards,
       })
+    }
+
+    if (!input.dryRun) {
+      if (includeArticles) {
+        await applySnapshotManifestForSource({
+          sourceKey: 'articles',
+          desiredEntries: desiredDocs
+            .filter((doc) => doc.sourceKey === 'articles')
+            .map((doc) => ({ filePath: doc.path, contentHash: doc.contentHash })),
+        })
+      }
+
+      if (includeCards) {
+        await applySnapshotManifestForSource({
+          sourceKey: 'cards',
+          desiredEntries: desiredDocs
+            .filter((doc) => doc.sourceKey === 'cards')
+            .map((doc) => ({ filePath: doc.path, contentHash: doc.contentHash })),
+        })
+      }
+
+      result.applied = true
     }
 
     await finishRunSuccess({

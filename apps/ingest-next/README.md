@@ -20,6 +20,7 @@ This app is the starting point for your ingestion pipeline.
 - Supports idempotency via `x-idempotency-key` on manual runs
 - Supports source selection on manual runs (`all`, `articles`, `cards`)
 - Returns reconciliation dry-run (`add`, `update`, `delete`) with sample output paths
+- Supports `dryRun` toggle (`true` default for manual runs)
 
 ## Quick start
 
@@ -39,6 +40,12 @@ Run only one source:
 
 ```bash
 curl -X POST "http://localhost:3000/api/ingest/run?source=articles"
+```
+
+Apply manifest changes (non-dry-run):
+
+```bash
+curl -X POST "http://localhost:3000/api/ingest/run?source=articles&dryRun=false"
 ```
 
 ## Scheduling
@@ -89,4 +96,4 @@ Reconciliation behavior:
 
 1. The run response includes file-operation plan counts (`reconciliation.add|update|delete`).
 2. This compares deterministic normalized docs against `snapshot_manifest` in Postgres.
-3. Current stage is dry-run planning only (no git publish yet).
+3. `dryRun=false` applies manifest state changes in Postgres (still no git publish yet).

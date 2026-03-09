@@ -23,6 +23,7 @@ export async function GET(request: Request) {
       trigger: 'cron',
       runKey: `cron-all-${utcDay}`,
       source: 'all',
+      dryRun: false,
     }))
   } catch (error) {
     return NextResponse.json(

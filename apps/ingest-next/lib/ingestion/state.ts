@@ -169,3 +169,46 @@ export async function getSnapshotManifestBySources(
 
   return result.rows
 }
+
+export async function applySnapshotManifestForSource(input: {
+  sourceKey: 'articles' | 'cards'
+  desiredEntries: Array<{ filePath: string, contentHash: string }>
+}) {
+  await ensureSchema()
+
+  await query('BEGIN')
+  try {
+    for (const entry of input.desiredEntries) {
+      await query(
+        `INSERT INTO snapshot_manifest (source_key, file_path, content_hash, updated_at)
+         VALUES ($1, $2, $3, NOW())
+         ON CONFLICT (source_key, file_path)
+         DO UPDATE SET
+           content_hash = EXCLUDED.content_hash,
+           updated_at = NOW()`,
+        [input.sourceKey, entry.filePath, entry.contentHash],
+      )
+    }
+
+    if (input.desiredEntries.length === 0) {
+      await query(
+        `DELETE FROM snapshot_manifest
+          WHERE source_key = $1`,
+        [input.sourceKey],
+      )
+    } else {
+      const keepPaths = input.desiredEntries.map((entry) => entry.filePath)
+      await query(
+        `DELETE FROM snapshot_manifest
+          WHERE source_key = $1
+            AND NOT (file_path = ANY($2::text[]))`,
+        [input.sourceKey, keepPaths],
+      )
+    }
+
+    await query('COMMIT')
+  } catch (error) {
+    await query('ROLLBACK')
+    throw error
+  }
+}
