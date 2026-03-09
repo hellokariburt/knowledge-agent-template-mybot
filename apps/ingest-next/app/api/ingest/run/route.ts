@@ -1,34 +1,18 @@
 import { NextResponse } from 'next/server'
-import articles from '@/fixtures/articles-rag/index.json'
-import cards from '@/fixtures/cards-rag/index.json'
+import { runIngestion } from '@/lib/ingestion/run'
 
-type IndexData = { count: number, items: Array<Record<string, unknown>> }
+function getRunKey(request: Request): string {
+  const incoming = request.headers.get('x-idempotency-key')?.trim()
+  return incoming && incoming.length > 0 ? incoming : `manual-${crypto.randomUUID()}`
+}
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const articleIndex = articles as IndexData
-    const cardIndex = cards as IndexData
-
-    // Dry-run output: this is the contract your real ingestion run should produce.
-    return NextResponse.json({
-      status: 'ok',
-      dryRun: true,
-      summary: {
-        articles: articleIndex.count,
-        cards: cardIndex.count,
-        total: articleIndex.count + cardIndex.count,
-      },
-      sample: {
-        article: articleIndex.items[0] ?? null,
-        card: cardIndex.items[0] ?? null,
-      },
-      next: [
-        'replace fixture reader with WP/EKS fetch adapters',
-        'write transformed output to snapshot repo workspace',
-        'commit/push to snapshot repo',
-        'trigger KAT /api/sync',
-      ],
-    })
+    return NextResponse.json(await runIngestion({
+      trigger: 'manual',
+      runKey: getRunKey(request),
+      sourceKey: 'all',
+    }))
   } catch (error) {
     return NextResponse.json(
       {

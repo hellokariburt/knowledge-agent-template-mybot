@@ -13,6 +13,11 @@ This app is the starting point for your ingestion pipeline.
 
 - Uses local fixture data from `fixtures/articles-rag` and `fixtures/cards-rag`
 - Includes a starter API route: `POST /api/ingest/run`
+- Includes a protected cron route: `GET /api/ingest/cron`
+- Includes Vercel cron config (`vercel.json`) running once daily
+- Persists run state in Postgres (`ingestion_runs`, `sync_state`)
+- Enforces one active run lock per source/environment
+- Supports idempotency via `x-idempotency-key` on manual runs
 
 ## Quick start
 
@@ -26,4 +31,32 @@ Test:
 
 ```bash
 curl -X POST http://localhost:3000/api/ingest/run
+```
+
+## Scheduling
+
+Set these env vars in Vercel for this project:
+
+- `DATABASE_URL` (Neon/Postgres connection string)
+- `CRON_SECRET` (shared secret for cron endpoint auth)
+- `PGSSLMODE=disable` (optional for local/non-SSL Postgres only)
+Vercel will call:
+
+- `GET /api/ingest/cron` once daily (`0 9 * * *`, UTC)
+
+Note: cron schedule is defined in `vercel.json` and cannot be driven directly by env vars.
+The ingestion tables are auto-created on first successful DB-backed run.
+
+Manual test of cron route:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/ingest/cron
+```
+
+Manual run with idempotency key:
+
+```bash
+curl -X POST \
+  -H "x-idempotency-key: ingest-manual-2026-03-09" \
+  http://localhost:3000/api/ingest/run
 ```
