@@ -87,7 +87,11 @@ export async function startRun(input: {
 
 export async function finishRunSuccess(input: {
   runId: string
-  sourceKeys: string[]
+  sourceUpdates: Array<{
+    sourceKey: string
+    cursorToken: string | null
+    watermarkTs: string | null
+  }>
   articlesCount: number
   cardsCount: number
   metadata?: Record<string, unknown>
@@ -103,16 +107,17 @@ export async function finishRunSuccess(input: {
     [input.runId, input.articlesCount, input.cardsCount, JSON.stringify(input.metadata ?? {})],
   )
 
-  for (const sourceKey of input.sourceKeys) {
+  for (const update of input.sourceUpdates) {
     await query(
-      `INSERT INTO sync_state (source_key, watermark_ts, last_success_at, updated_at)
-       VALUES ($1, NOW(), NOW(), NOW())
+      `INSERT INTO sync_state (source_key, cursor_token, watermark_ts, last_success_at, updated_at)
+       VALUES ($1, $2, $3, NOW(), NOW())
        ON CONFLICT (source_key)
        DO UPDATE SET
+         cursor_token = EXCLUDED.cursor_token,
          watermark_ts = EXCLUDED.watermark_ts,
          last_success_at = EXCLUDED.last_success_at,
          updated_at = NOW()`,
-      [sourceKey],
+      [update.sourceKey, update.cursorToken, update.watermarkTs],
     )
   }
 }

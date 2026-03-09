@@ -47,6 +47,7 @@ Set these env vars in Vercel for this project:
 - `DATABASE_URL` (Neon/Postgres connection string)
 - `CRON_SECRET` (shared secret for cron endpoint auth)
 - `PGSSLMODE=disable` (optional for local/non-SSL Postgres only)
+- `INGEST_CONNECTOR=mock` (default; connector implementation selector)
 Vercel will call:
 
 - `GET /api/ingest/cron` once daily (`0 9 * * *`, UTC)
@@ -76,3 +77,9 @@ curl -X POST \
   -d '{"source":"cards"}' \
   http://localhost:3000/api/ingest/run
 ```
+
+Incremental behavior with mock connector:
+
+1. First run ingests fixture rows and stores per-source watermark.
+2. Next run with the same source ingests only rows with `updated_at > watermark`.
+3. With static fixtures, repeated runs should quickly return `summary.total = 0`.

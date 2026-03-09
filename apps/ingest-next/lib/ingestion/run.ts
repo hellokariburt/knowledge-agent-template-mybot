@@ -1,11 +1,9 @@
-import articles from '@/fixtures/articles-rag/index.json'
-import cards from '@/fixtures/cards-rag/index.json'
+import { getConnector } from '@/lib/ingestion/connectors'
+import type { IngestionRecord } from '@/lib/ingestion/connectors/types'
 import { finishRunFailed, finishRunSuccess, getSyncState, startRun } from '@/lib/ingestion/state'
 
 export type IngestionTrigger = 'manual' | 'cron'
 export type IngestionSource = 'all' | 'articles' | 'cards'
-
-type IndexData = { count: number, items: Array<Record<string, unknown>> }
 
 export type IngestionRunResult = {
   status: 'ok' | 'skipped'
@@ -16,6 +14,7 @@ export type IngestionRunResult = {
   mode: 'started' | 'duplicate' | 'locked'
   environment: string
   source: IngestionSource
+  connector: string
   cursor: {
     articles: string | null
     cards: string | null
@@ -42,12 +41,54 @@ type RunIngestionInput = {
   source: IngestionSource
 }
 
+type SourceResult = {
+  items: IngestionRecord[]
+  finalCursorToken: string | null
+  maxUpdatedAt: string | null
+}
+
+function maxTimestamp(left: string | null, right: string | null): string | null {
+  if (!left) return right
+  if (!right) return left
+  return Date.parse(left) >= Date.parse(right) ? left : right
+}
+
+async function fetchAllForSource(input: {
+  source: 'articles' | 'cards'
+  watermarkTs: string | null
+  cursorToken: string | null
+}): Promise<SourceResult> {
+  const connector = getConnector()
+  const items: IngestionRecord[] = []
+  let cursorToken = input.cursorToken
+  let maxUpdatedAt: string | null = null
+
+  while (true) {
+    const page = await connector.fetchPage({
+      source: input.source,
+      watermarkTs: input.watermarkTs,
+      cursorToken,
+    })
+
+    items.push(...page.items)
+    maxUpdatedAt = maxTimestamp(maxUpdatedAt, page.maxUpdatedAt)
+    cursorToken = page.nextCursorToken
+
+    if (!cursorToken) break
+  }
+
+  return {
+    items,
+    finalCursorToken: null,
+    maxUpdatedAt: maxTimestamp(input.watermarkTs, maxUpdatedAt),
+  }
+}
+
 export async function runIngestion(input: RunIngestionInput): Promise<IngestionRunResult> {
-  const articleIndex = articles as IndexData
-  const cardIndex = cards as IndexData
   const sourceKey = input.source
   const environment = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? 'development'
   const runId = crypto.randomUUID()
+  const connector = getConnector()
 
   const articleState = await getSyncState('articles')
   const cardState = await getSyncState('cards')
@@ -70,6 +111,7 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
       mode: 'locked',
       environment,
       source: input.source,
+      connector: connector.name,
       cursor: {
         articles: articleState?.cursor_token ?? null,
         cards: cardState?.cursor_token ?? null,
@@ -104,6 +146,7 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
       mode: 'duplicate',
       environment,
       source: input.source,
+      connector: connector.name,
       cursor: {
         articles: articleState?.cursor_token ?? null,
         cards: cardState?.cursor_token ?? null,
@@ -131,13 +174,22 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
   try {
     const includeArticles = input.source === 'all' || input.source === 'articles'
     const includeCards = input.source === 'all' || input.source === 'cards'
-    const sourceKeysToUpdate = [
-      ...(includeArticles ? ['articles'] : []),
-      ...(includeCards ? ['cards'] : []),
-    ]
 
-    const articleCount = includeArticles ? articleIndex.count : 0
-    const cardCount = includeCards ? cardIndex.count : 0
+    const articleFetch = includeArticles
+      ? await fetchAllForSource({
+        source: 'articles',
+        watermarkTs: articleState?.watermark_ts ?? null,
+        cursorToken: articleState?.cursor_token ?? null,
+      })
+      : { items: [], finalCursorToken: articleState?.cursor_token ?? null, maxUpdatedAt: articleState?.watermark_ts ?? null }
+
+    const cardFetch = includeCards
+      ? await fetchAllForSource({
+        source: 'cards',
+        watermarkTs: cardState?.watermark_ts ?? null,
+        cursorToken: cardState?.cursor_token ?? null,
+      })
+      : { items: [], finalCursorToken: cardState?.cursor_token ?? null, maxUpdatedAt: cardState?.watermark_ts ?? null }
 
     const result: IngestionRunResult = {
       status: 'ok',
@@ -148,40 +200,58 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
       mode: 'started',
       environment,
       source: input.source,
+      connector: connector.name,
       cursor: {
-        articles: articleState?.cursor_token ?? null,
-        cards: cardState?.cursor_token ?? null,
+        articles: articleFetch.finalCursorToken,
+        cards: cardFetch.finalCursorToken,
       },
       watermark: {
-        articles: articleState?.watermark_ts ?? null,
-        cards: cardState?.watermark_ts ?? null,
+        articles: articleFetch.maxUpdatedAt,
+        cards: cardFetch.maxUpdatedAt,
       },
       summary: {
-        articles: articleCount,
-        cards: cardCount,
-        total: articleCount + cardCount,
+        articles: articleFetch.items.length,
+        cards: cardFetch.items.length,
+        total: articleFetch.items.length + cardFetch.items.length,
       },
       sample: {
-        article: includeArticles ? (articleIndex.items[0] ?? null) : null,
-        card: includeCards ? (cardIndex.items[0] ?? null) : null,
+        article: articleFetch.items[0] ?? null,
+        card: cardFetch.items[0] ?? null,
       },
       next: [
-        'replace fixture reader with WP/EKS fetch adapters',
-        'add cursor/watermark persistence in Neon',
-        'write transformed output to snapshot repo workspace',
-        'commit/push to snapshot repo and trigger KAT /api/sync',
+        'replace mock connector with WP/EKS fetch adapters',
+        'add deterministic writer for docs/articles and docs/cards',
+        'publish reconciliation to snapshot repo (add/update/delete)',
+        'trigger KAT /api/sync after successful publish',
       ],
+    }
+
+    const sourceUpdates: Array<{ sourceKey: string, cursorToken: string | null, watermarkTs: string | null }> = []
+    if (includeArticles) {
+      sourceUpdates.push({
+        sourceKey: 'articles',
+        cursorToken: result.cursor.articles,
+        watermarkTs: result.watermark.articles,
+      })
+    }
+    if (includeCards) {
+      sourceUpdates.push({
+        sourceKey: 'cards',
+        cursorToken: result.cursor.cards,
+        watermarkTs: result.watermark.cards,
+      })
     }
 
     await finishRunSuccess({
       runId: runStart.runId,
-      sourceKeys: sourceKeysToUpdate,
+      sourceUpdates,
       articlesCount: result.summary.articles,
       cardsCount: result.summary.cards,
       metadata: {
         dryRun: result.dryRun,
         trigger: result.trigger,
         source: result.source,
+        connector: result.connector,
       },
     })
 
@@ -190,7 +260,7 @@ export async function runIngestion(input: RunIngestionInput): Promise<IngestionR
     await finishRunFailed({
       runId: runStart.runId,
       errorText: error instanceof Error ? error.message : String(error),
-      metadata: { trigger: input.trigger },
+      metadata: { trigger: input.trigger, source: input.source },
     })
     throw error
   }
