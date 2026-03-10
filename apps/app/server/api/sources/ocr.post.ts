@@ -1,5 +1,6 @@
 import { generateText, Output } from 'ai'
 import { z } from 'zod'
+import { resolveLanguageModel } from '@savoir/agent'
 import type { SourceOcrItem } from '#shared/utils/source-ocr'
 import { IMAGE_OPTIMIZATION_CONFIG } from '#shared/utils/file'
 import { optimizeImage } from '~~/server/utils/image/optimize'
@@ -33,6 +34,9 @@ IMPORTANT:
 - Only extract clearly defined sources, ignore partial or unclear data
 
 Return ALL valid sources found.`
+
+const OCR_IMAGE_MODEL = process.env.SOURCE_OCR_IMAGE_MODEL || process.env.OPENAI_MODEL || 'openai/gpt-4o'
+const OCR_CONFIG_MODEL = process.env.SOURCE_OCR_CONFIG_MODEL || process.env.OPENAI_ROUTER_MODEL || process.env.OPENAI_MODEL || 'openai/gpt-4o-mini'
 
 const YOUTUBE_CHANNEL_PATTERN = /^UC[a-zA-Z0-9_-]{22}$/
 
@@ -130,7 +134,7 @@ async function extractFromImage(image: string) {
   }
 
   const { output } = await generateText({
-    model: 'google/gemini-3-flash',
+    model: resolveLanguageModel(OCR_IMAGE_MODEL),
     output: Output.object({ schema: sourceOcrSchema }),
     messages: [
       {
@@ -147,7 +151,7 @@ async function extractFromImage(image: string) {
 
 async function extractFromConfig(config: { filename: string, content: string }) {
   const { output } = await generateText({
-    model: 'google/gemini-2.5-flash-lite',
+    model: resolveLanguageModel(OCR_CONFIG_MODEL),
     output: Output.object({ schema: sourceOcrSchema }),
     messages: [
       {

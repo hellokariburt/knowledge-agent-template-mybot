@@ -57,6 +57,15 @@ export function resolveLanguageModel(modelId: string, gatewayApiKey?: string): L
     return google(modelId.slice('google/'.length))
   }
 
+  // In direct-provider mode, never fall through to AI Gateway for an unsupported
+  // provider family. Use the configured direct default model instead.
+  if (shouldPreferDirectProviders()) {
+    const fallbackModel = getPreferredDefaultModel()
+    if (fallbackModel !== modelId) {
+      return resolveLanguageModel(fallbackModel)
+    }
+  }
+
   const gateway = createGateway(gatewayApiKey ? { apiKey: gatewayApiKey } : undefined)
   return gateway(modelId)
 }

@@ -1,4 +1,5 @@
 import { createGateway } from '@ai-sdk/gateway'
+import { shouldPreferDirectProviders } from '@savoir/agent'
 
 interface ModelPricing {
   input: number // cost per token in USD
@@ -10,6 +11,10 @@ type PricingRecord = Record<string, ModelPricing>
 export const getModelPricingMap = defineCachedFunction(
   async (apiKey?: string): Promise<PricingRecord> => {
     try {
+      if (shouldPreferDirectProviders() || !apiKey) {
+        return {}
+      }
+
       const gateway = createGateway(apiKey ? { apiKey } : undefined)
       const { models } = await gateway.getAvailableModels()
 
