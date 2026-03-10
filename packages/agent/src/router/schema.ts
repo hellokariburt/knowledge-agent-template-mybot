@@ -1,9 +1,13 @@
 import type { SharedV3ProviderOptions } from '@ai-sdk/provider'
 import { z } from 'zod'
-import { shouldPreferDirectOpenAI } from '../models/provider'
+import {
+  getPreferredDefaultModel,
+  getPreferredRouterModel,
+  shouldPreferDirectProviders,
+} from '../models/provider'
 
-export const ROUTER_MODEL = shouldPreferDirectOpenAI() ? 'openai/gpt-4o-mini' : 'google/gemini-2.5-flash-lite'
-export const DEFAULT_MODEL = shouldPreferDirectOpenAI() ? 'openai/gpt-4o' : 'google/gemini-3-flash'
+export const ROUTER_MODEL = shouldPreferDirectProviders() ? getPreferredRouterModel() : 'google/gemini-2.5-flash-lite'
+export const DEFAULT_MODEL = shouldPreferDirectProviders() ? getPreferredDefaultModel() : 'google/gemini-3-flash'
 
 export const agentConfigSchema = z.object({
   complexity: z.enum(['trivial', 'simple', 'moderate', 'complex'])
@@ -30,7 +34,7 @@ export function getDefaultConfig(): AgentConfig {
   return {
     complexity: 'moderate',
     maxSteps: 15,
-    model: shouldPreferDirectOpenAI() ? 'openai/gpt-4o' : 'anthropic/claude-sonnet-4.6',
+    model: shouldPreferDirectProviders() ? DEFAULT_MODEL as AgentConfig['model'] : 'anthropic/claude-sonnet-4.6',
     reasoning: 'Default fallback configuration',
   }
 }
@@ -45,7 +49,7 @@ const MODEL_FALLBACKS: Record<string, string[]> = {
 }
 
 export function getModelFallbackOptions(model: string): SharedV3ProviderOptions | undefined {
-  if (shouldPreferDirectOpenAI()) return undefined
+  if (shouldPreferDirectProviders()) return undefined
   const fallbacks = MODEL_FALLBACKS[model]
   if (!fallbacks?.length) return undefined
   return { gateway: { models: fallbacks } }

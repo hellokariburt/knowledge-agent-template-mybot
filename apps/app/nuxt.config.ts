@@ -126,7 +126,7 @@ export default defineNuxtConfig({
       secret: '',
       ownerUserId: '',
       allowedOrigins: '',
-      defaultModel: 'google/gemini-3-flash',
+      defaultModel: process.env.NUXT_WIDGET_DEFAULT_MODEL || process.env.OPENAI_MODEL || 'openai/gpt-4o',
       name: 'TPG Assistant',
       welcomeMessage: 'Hi, I can help with points, cards, and travel strategy.',
       tokenTtlSeconds: 600,

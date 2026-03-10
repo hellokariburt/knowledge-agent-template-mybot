@@ -15,7 +15,14 @@ cp apps/app/.env.example apps/app/.env
 | `BETTER_AUTH_SECRET` | Secret used to sign sessions and tokens. See [Better Auth docs](https://www.better-auth.com/docs/installation#set-environment-variables). |
 | `GITHUB_CLIENT_ID` | GitHub App client ID (used for OAuth login). See [GitHub App Setup](#github-app-setup) below. |
 | `GITHUB_CLIENT_SECRET` | GitHub App client secret |
-| `AI_GATEWAY_API_KEY` | [Vercel AI Gateway](https://ai-sdk.dev) API key (optional on Vercel — OIDC handles auth automatically, only needed for local dev) |
+| `OPENAI_API_KEY` | OpenAI API key used for `openai/*` assistant models |
+
+You can also use direct provider keys for additional model families:
+
+| Variable | Description |
+|----------|-------------|
+| `ANTHROPIC_API_KEY` | Anthropic API key used for `anthropic/*` models |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Gemini API key used for `google/*` models |
 
 `NUXT_GITHUB_SNAPSHOT_REPO` and `NUXT_GITHUB_TOKEN` are optional. You can configure the snapshot repository in the admin sandbox UI after startup, and the app uses a GitHub App installation access token automatically when app credentials are configured.
 

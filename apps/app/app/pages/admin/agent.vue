@@ -92,9 +92,12 @@ const languageOptions = [
 
 const modelOptions = [
   { value: 'auto', label: 'Automatic (Recommended)' },
-  { value: 'google/gemini-2.5-flash-lite', label: 'Fast' },
-  { value: 'google/gemini-3-flash', label: 'Balanced' },
-  { value: 'anthropic/claude-opus-4.5', label: 'Advanced' },
+  { value: 'openai/gpt-4o-mini', label: 'Fast' },
+  { value: 'openai/gpt-4o', label: 'Balanced' },
+  { value: 'google/gemini-2.5-flash-lite', label: 'Gemini Fast' },
+  { value: 'google/gemini-3-flash', label: 'Gemini Balanced' },
+  { value: 'anthropic/claude-sonnet-4.6', label: 'Claude Balanced' },
+  { value: 'anthropic/claude-opus-4.6', label: 'Claude Advanced' },
 ]
 
 async function saveConfig() {

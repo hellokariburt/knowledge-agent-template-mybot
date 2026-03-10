@@ -17,7 +17,12 @@ export {
   DEFAULT_MODEL,
   ROUTER_MODEL,
 } from './router/schema'
-export { resolveLanguageModel, shouldPreferDirectOpenAI } from './models/provider'
+export {
+  resolveLanguageModel,
+  shouldPreferDirectProviders,
+  getPreferredDefaultModel,
+  getPreferredRouterModel,
+} from './models/provider'
 
 // Prompts
 export { ROUTER_SYSTEM_PROMPT } from './prompts/router'

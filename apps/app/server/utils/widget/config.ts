@@ -30,7 +30,7 @@ export function getWidgetRuntimeConfig(): WidgetRuntimeConfig {
     secret: String(widget.secret ?? ''),
     ownerUserId: String(widget.ownerUserId ?? ''),
     allowedOrigins: splitOrigins(String(widget.allowedOrigins ?? '')),
-    defaultModel: String(widget.defaultModel ?? 'google/gemini-3-flash'),
+    defaultModel: String(widget.defaultModel ?? process.env.OPENAI_MODEL ?? 'openai/gpt-4o'),
     name: String(widget.name ?? 'TPG Assistant'),
     welcomeMessage: String(widget.welcomeMessage ?? 'Hi, I can help with points, cards, and travel strategy.'),
     tokenTtlSeconds: Number(widget.tokenTtlSeconds ?? 600),
