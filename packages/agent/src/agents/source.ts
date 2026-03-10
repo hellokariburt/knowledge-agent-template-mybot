@@ -1,6 +1,7 @@
 import { stepCountIs, ToolLoopAgent, type StepResult, type ToolSet, type UIMessage } from 'ai'
 import { log } from 'evlog'
 import { DEFAULT_MODEL, getModelFallbackOptions } from '../router/schema'
+import { resolveLanguageModel } from '../models/provider'
 import { routeQuestion } from '../router/route-question'
 import { buildChatSystemPrompt } from '../prompts/chat'
 import { applyComplexity } from '../prompts/shared'
@@ -42,7 +43,7 @@ export function createSourceAgent({
   let maxSteps = 15
 
   return new ToolLoopAgent({
-    model: DEFAULT_MODEL,
+    model: resolveLanguageModel(DEFAULT_MODEL, apiKey),
     callOptionsSchema,
     prepareCall: async ({ options, ...settings }) => {
       const modelOverride = (options as AgentCallOptions | undefined)?.model
@@ -70,7 +71,7 @@ export function createSourceAgent({
 
       return {
         ...settings,
-        model: effectiveModel,
+        model: resolveLanguageModel(effectiveModel, apiKey),
         instructions: applyComplexity(buildChatSystemPrompt(agentConfig), routerConfig),
         tools: { ...tools, web_search: webSearchTool },
         stopWhen: stepCountIs(effectiveMaxSteps),

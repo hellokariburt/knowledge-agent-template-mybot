@@ -42,7 +42,13 @@ export async function getLatestSnapshot(): Promise<VercelSnapshot | null> {
 }
 
 async function getCachedLatestSnapshot(): Promise<CachedSnapshotStatus> {
-  const cached = await kv.get<CachedSnapshotStatus>(KV_KEYS.SNAPSHOT_STATUS_CACHE)
+  let cached: CachedSnapshotStatus | null = null
+
+  try {
+    cached = await kv.get<CachedSnapshotStatus>(KV_KEYS.SNAPSHOT_STATUS_CACHE)
+  } catch {
+    cached = null
+  }
 
   if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
     return cached
@@ -55,7 +61,11 @@ async function getCachedLatestSnapshot(): Promise<CachedSnapshotStatus> {
     cachedAt: Date.now(),
   }
 
-  await kv.set(KV_KEYS.SNAPSHOT_STATUS_CACHE, freshCache)
+  try {
+    await kv.set(KV_KEYS.SNAPSHOT_STATUS_CACHE, freshCache)
+  } catch {
+    // Ignore cache write failures in environments without writable KV.
+  }
 
   return freshCache
 }
@@ -104,7 +114,11 @@ export async function syncToSnapshot(snapshotId?: string): Promise<SnapshotMetad
   }
 
   await setCurrentSnapshot(metadata)
-  await kv.del(KV_KEYS.SNAPSHOT_STATUS_CACHE)
+  try {
+    await kv.del(KV_KEYS.SNAPSHOT_STATUS_CACHE)
+  } catch {
+    // Ignore cache invalidation failures in environments without writable KV.
+  }
 
   return metadata
 }
