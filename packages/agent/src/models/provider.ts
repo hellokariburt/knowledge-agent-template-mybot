@@ -1,3 +1,4 @@
+import type { LanguageModelV3 } from '@ai-sdk/provider'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGateway } from '@ai-sdk/gateway'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
@@ -40,7 +41,7 @@ export function getPreferredDefaultModel(): string {
   return 'google/gemini-3-flash'
 }
 
-export function resolveLanguageModel(modelId: string, gatewayApiKey?: string) {
+export function resolveLanguageModel(modelId: string, gatewayApiKey?: string): LanguageModelV3 {
   if (modelId.startsWith('openai/') && hasDirectOpenAIKey()) {
     const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY })
     return openai(modelId.slice('openai/'.length))
