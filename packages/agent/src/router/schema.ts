@@ -1,8 +1,9 @@
 import type { SharedV3ProviderOptions } from '@ai-sdk/provider'
 import { z } from 'zod'
+import { shouldPreferDirectOpenAI } from '../models/provider'
 
-export const ROUTER_MODEL = 'google/gemini-2.5-flash-lite'
-export const DEFAULT_MODEL = 'google/gemini-3-flash'
+export const ROUTER_MODEL = shouldPreferDirectOpenAI() ? 'openai/gpt-4o-mini' : 'google/gemini-2.5-flash-lite'
+export const DEFAULT_MODEL = shouldPreferDirectOpenAI() ? 'openai/gpt-4o' : 'google/gemini-3-flash'
 
 export const agentConfigSchema = z.object({
   complexity: z.enum(['trivial', 'simple', 'moderate', 'complex'])
@@ -15,6 +16,8 @@ export const agentConfigSchema = z.object({
     'google/gemini-3-flash',
     'anthropic/claude-sonnet-4.6',
     'anthropic/claude-opus-4.6',
+    'openai/gpt-4o',
+    'openai/gpt-4o-mini',
   ]).describe('flash for trivial/simple, sonnet for moderate, opus for complex'),
 
   reasoning: z.string().max(200)
@@ -27,7 +30,7 @@ export function getDefaultConfig(): AgentConfig {
   return {
     complexity: 'moderate',
     maxSteps: 15,
-    model: 'anthropic/claude-sonnet-4.6',
+    model: shouldPreferDirectOpenAI() ? 'openai/gpt-4o' : 'anthropic/claude-sonnet-4.6',
     reasoning: 'Default fallback configuration',
   }
 }
@@ -37,9 +40,12 @@ const MODEL_FALLBACKS: Record<string, string[]> = {
   'anthropic/claude-sonnet-4.6': ['google/gemini-3-flash', 'openai/gpt-4o'],
   'anthropic/claude-opus-4.6': ['anthropic/claude-sonnet-4.6', 'google/gemini-3-flash'],
   'google/gemini-2.5-flash-lite': ['google/gemini-3-flash', 'openai/gpt-4o-mini'],
+  'openai/gpt-4o': ['openai/gpt-4o-mini'],
+  'openai/gpt-4o-mini': ['openai/gpt-4o'],
 }
 
 export function getModelFallbackOptions(model: string): SharedV3ProviderOptions | undefined {
+  if (shouldPreferDirectOpenAI()) return undefined
   const fallbacks = MODEL_FALLBACKS[model]
   if (!fallbacks?.length) return undefined
   return { gateway: { models: fallbacks } }

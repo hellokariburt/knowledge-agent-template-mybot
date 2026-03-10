@@ -16,7 +16,7 @@ cp apps/app/.env.example apps/app/.env
 | `GITHUB_CLIENT_ID` | From your [GitHub App settings](https://github.com/settings/apps) → Client ID |
 | `GITHUB_CLIENT_SECRET` | From your [GitHub App settings](https://github.com/settings/apps) → Generate a client secret |
 
-These three variables are all you need to deploy to Vercel. For **local development**, you also need `AI_GATEWAY_API_KEY` (see [AI](#ai) below). Everything else is optional.
+These three variables are all you need to deploy to Vercel. For **local development**, you need either `AI_GATEWAY_API_KEY` or `OPENAI_API_KEY` (see [AI](#ai) below). Everything else is optional.
 
 ## Authentication
 
@@ -50,7 +50,7 @@ Session encryption password. Auto-generated if not set.
 
 ## AI
 
-### `AI_GATEWAY_API_KEY` (optional — required for local dev only)
+### `AI_GATEWAY_API_KEY` (optional — recommended if you want gateway/provider routing)
 
 API key for [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) (used by `@ai-sdk/gateway` to route to any AI model).
 
@@ -59,6 +59,12 @@ On **Vercel deployments**, this is not needed — the project automatically auth
 1. Go to the [Vercel AI dashboard](https://vercel.com/~/ai)
 2. Create a new Gateway (or use an existing one)
 3. Copy the API key → `AI_GATEWAY_API_KEY`
+
+### `OPENAI_API_KEY` (optional — supported for direct OpenAI local/dev usage)
+
+If `OPENAI_API_KEY` is set and `AI_GATEWAY_API_KEY` is not set, the agent package will use direct OpenAI models for `openai/*` model IDs and will default the router/base model selection to OpenAI-compatible defaults.
+
+This is useful when you want to run the project locally against OpenAI directly instead of Vercel AI Gateway.
 
 ## Sandbox & Sync
 

@@ -15,7 +15,7 @@ export interface SourceAgentOptions {
   tools: Record<string, unknown>
   getAgentConfig: () => Promise<AgentConfigData>
   messages: UIMessage[]
-  /** AI Gateway API key. Optional — falls back to OIDC on Vercel or AI_GATEWAY_API_KEY env var. */
+  /** AI Gateway API key. Optional — direct OpenAI is used for `openai/*` models when `OPENAI_API_KEY` is set. */
   apiKey?: string
   requestId?: string
   /** Falls back to agentConfig.defaultModel then DEFAULT_MODEL */
