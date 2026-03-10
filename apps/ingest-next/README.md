@@ -11,7 +11,7 @@ This app is the starting point for your ingestion pipeline.
 
 ## Current state
 
-- Uses local fixture data from `fixtures/articles-rag` and `fixtures/cards-rag`
+- Uses local source files from `knowledge/articles` and `knowledge/cards`
 - Includes a starter API route: `POST /api/ingest/run`
 - Includes a protected cron route: `GET /api/ingest/cron`
 - Includes Vercel cron config (`vercel.json`) running once daily
@@ -77,6 +77,8 @@ Set these env vars in Vercel for this project:
 - `INGEST_CONNECTOR=mock` (default; connector implementation selector)
 - `INGEST_CRON_PUBLISH_MODE` (`dry-run` default; can be `local` or `git`)
 - `SNAPSHOT_REPO_URL` + `SNAPSHOT_REPO_TOKEN` + `SNAPSHOT_REPO_BRANCH` (required for `publishMode=git`)
+- `SNAPSHOT_GIT_USER_NAME` + `SNAPSHOT_GIT_USER_EMAIL` (optional commit identity for `publishMode=git`)
+- `INGEST_KEEP_GIT_WORKDIR=true` (optional; keep temp git workspace for debugging)
 - `KAT_SYNC_URL` + `KAT_SYNC_TOKEN` (optional; trigger KAT sync after successful non-dry-run publish)
 Vercel will call:
 
@@ -117,9 +119,9 @@ curl -H "Authorization: Bearer $INGEST_STATUS_SECRET" \
 
 Incremental behavior with mock connector:
 
-1. First run ingests fixture rows and stores per-source watermark.
+1. First run ingests local `knowledge/` rows and stores per-source watermark.
 2. Next run with the same source ingests only rows with `updated_at > watermark`.
-3. With static fixtures, repeated runs should quickly return `summary.total = 0`.
+3. With unchanged local files, repeated runs should quickly return `summary.total = 0`.
 
 Reconciliation behavior:
 
@@ -134,3 +136,17 @@ Publish behavior:
    - `INGEST_OUTPUT_DIR` if set, else
    - `./.ingest-output` locally, or `/tmp/ingest-output` on Vercel.
 3. `publishMode=git` clones snapshot repo, applies file changes, commits, and pushes.
+4. If the target branch does not exist yet, the publisher creates it automatically.
+
+Mock knowledge input:
+
+1. Put article source files under `knowledge/articles`.
+2. Put card source files under `knowledge/cards`.
+3. Files can be:
+   - JSON payloads serialized into `.md`, `.txt`, or `.json`
+   - plain text/markdown files
+4. JSON payloads can include:
+   - `id`
+   - `text`
+   - `metadata.title`, `metadata.slug`, `metadata.pathname`, `metadata.updated` for articles
+   - `metadata.name`, `metadata.issuer`, `metadata.reviewLink` for cards
